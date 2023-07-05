@@ -3951,11 +3951,22 @@ Function fn_getNSXCreds {
 
 Function fn_GetSddcCreds {
   Clear-Host
-  $global:sddcEnv ="Y"
+# Determine if SDDC Connection Exist or Switch Manager
+  if ($global:SDDCmgr -ne "Not Connected") {
+    Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
+    Write-Host $global:SDDCmgr -ForegroundColor Yellow 
+    Write-Host
+    $ChangeSDDCmgr = Read-Host "Stay connected to this SDDC Manager (Y/N)?" -ForegroundColor Green -NoNewline
+    if ($ChangeSDDCmgr -eq 'N') {
+      $global:SDDCmgr = "Not Connected"
+      fn_GetSddcCreds
+    }
+  }
+# If Connected offer  
+  if ($global:SDDCmgr -eq "Not Connected") {
   Write-Host "SDDC Manager Information:" -ForegroundColor Green 
   Write-Host
-  Write-Host "Enter the IP Address or FQDN of the SDDC Manager: " -ForegroundColor Green -NoNewLine
-  $global:SDDCmgr = Read-Host
+  $global:SDDCmgr = Read-Host "Enter the IP Address or FQDN of the SDDC Manager " -ForegroundColor Green -NoNewLine
   Write-Host
   Write-Host "Testing ability to find $global:SDDCmgr..."
   if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
@@ -3992,15 +4003,20 @@ Function fn_GetSddcCreds {
   $SSHCommand = 'shell; uptime -s'
   $result = (Invoke-SSHCommand -SSHSession $global:SddCSSHSession -Command $SSHCommand).Output
   Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
-  fn_PressAnyKey
-  Clear-Host
   Write-Host "Info need for API YAML config file:" -ForegroundColor Green
   Write-Host
-  Write-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
-  $global:NTPServer = Read-Host
-  Write-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
-  $global:SFTPServer = Read-Host
+  $global:NTPServer = Read-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
+  $global:SFTPServer = Read-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
   Write-Host "Requesting SDDC API Token"
+
+# Determine if vCenter Credentials are Defined
+  if ($global:defaultVIServer -eq 'Not Connected') {
+    Write-Host "No vCenter SSO Credentials Identified." -ForegroundColor Red
+    fn_PressAnyKey
+    fn_GetvCenterCreds
+  }
+
+# Generate API Tokens for SDDC Manager
   fn_RequestSDDCToken
   Write-Host "SDDC API Token and YAML file created."
   fn_PressAnyKey
@@ -4008,23 +4024,24 @@ Function fn_GetSddcCreds {
 
 Function fn_GetvCenterCreds {
   Clear-Host
-  if ($global:defaultVIServer) {
+# If connected to a vCenter give option to switch. 
+  if ($global:defaultVIServer -ne "Not Connected") {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
     Write-Host $global:defaultVIServer -ForegroundColor Yellow 
     Write-Host
-    Write-Host "Change vCenter (Y/N)?" -ForegroundColor Green -NoNewline
-    $ChangevCenter = Read-Host
-    if ($ChangevCenter -eq 'Y') {
+    $ChangevCenter = Read-Host "Stay connected to this vCenter (Y/N)?" -ForegroundColor Green -NoNewline
+    if ($ChangevCenter -eq 'N') {
       Disconnect-VIServer -Server $global:defaultVIServer
+      $global:defaultVIServer = "Not Connected"
+      fn_GetvCenterCreds
     }
   }
 
-  if (!$global:DefaultVIServer) {
+  if ($global:DefaultVIServer -eq "Not Connected") {
     Clear-Host
     Write-Host "vCenter Information:" -ForegroundColor Green
     Write-Host
-    Write-Host "Enter the FQDN of the vCenter Server: " -ForegroundColor Green -NoNewline
-    $vServer = Read-Host
+    $vServer = Read-Host "Enter the FQDN of the vCenter Server " -ForegroundColor Green -NoNewline
     Write-Host "Testing ability to find $vServer..."
     Write-Host
     if (!(Test-Connection -ComputerName $vServer -Quiet -Count 2)) {
@@ -4096,7 +4113,6 @@ Function fn_GetvCenterCreds {
     $global:VCSSHcreds = Get-Credential
     $global:VCSSHuser= $global:VCSSHCreds.UserName.ToString()
     $global:VCSSHpass = $global:VCSSHCreds.GetNetworkCredential().password
-    if ($global:sddcEnv -eq "Y") {fn_RequestSDDCToken}
 
 # Enable SHELL for Root
     Write-Host "Enabeling Shell for root"
@@ -4189,31 +4205,32 @@ Function fn_Collector {
 Function fn_MainMenu {
     $host.UI.RawUI.BackgroundColor = "Black"
     Clear-Host
+    if (!($global:defaultVIServer)) {$global:defaultVIServer = "Not Connected"}
     Write-Host "Currently Connected to: " -ForegroundColor Green -NoNewLine
-    Write-Host $defaultVIServer -ForegroundColor Yellow
+    Write-Host $global:defaultVIServer -ForegroundColor Yellow
     Write-Host
     Write-Host "MAIN MENU" -ForegroundColor Green
     Write-Host
     Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan vCenter $defaultVIServer" -ForegroundColor Green
+    Write-Host "Scan vCenter (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan Hosts on $defaultVIServer" -ForegroundColor Green
+    Write-Host "Scan ESX Hosts (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan VMs on $defaultVIServer" -ForegroundColor Green
+    Write-Host "Scan VM Configurations (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[A] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Add Appliance IP to SSH Firewall     " -ForegroundColor Green
+    Write-Host "Add Appliance IP to SSH Firewall" -ForegroundColor Green
     Write-Host
     Write-Host "[R] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Remove Appliance IP from SSH Firewall     " -ForegroundColor Green
+    Write-Host "Remove Appliance IP from SSH Firewall" -ForegroundColor Green
     Write-Host
     Write-Host "[U] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Disable Lockdown Mode  " -ForegroundColor Green
+    Write-Host "Disable Lockdown Mode" -ForegroundColor Green
     Write-Host
     Write-Host "[L] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Enable Lockdown Mode  " -ForegroundColor Green
+    Write-Host "Enable Lockdown Mode" -ForegroundColor Green
     Write-Host
     Write-Host "[S] " -ForegroundColor Yellow -NoNewLine
     Write-Host "DISA STIG Report" -ForegroundColor Green
@@ -4227,6 +4244,7 @@ Function fn_MainMenu {
 
       1 {
           Clear-Host
+          if ($global:defaultVIServer -eq "Not Connectied") {fn_GetvCenterCreds}
           fn_Build_vCenter_CSV
           fn_Load_vCenter_Controls
           fn_RunScan
@@ -4236,6 +4254,8 @@ Function fn_MainMenu {
   
       2 {
         Clear-Host
+        if ($global:defaultVIServer -eq "Not Connectied") {fn_GetvCenterCreds}
+
         fn_Build_ESX_CSV
         fn_Load_ESX_Controls
         fn_RunScan
@@ -4326,6 +4346,8 @@ Function fn_STIGMenu {
 
       1 {
           Clear-Host
+          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+
           fn_vcfscanner
           fn_PressAnyKey
           fn_STIGMenu
@@ -4631,5 +4653,6 @@ Clear-Host
 $host.UI.RawUI.ForegroundColor = "White"
 $host.UI.RawUI.BackgroundColor = "Black"
 fn_Welcome
+fn_MainMenu
 fn_GetAppIP 
 fn_Collector
