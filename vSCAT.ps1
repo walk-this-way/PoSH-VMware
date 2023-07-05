@@ -1,76 +1,28 @@
 <#
 Version Notes
-
-v1.1 includes the Get-Credentials changes to allow for better password handling
-
-v1.2 
-Updated all functions requiring SSH to use Posh-SSH Module
-Updated Logic for Turning SSH On/Off by adding a new function fn_SSH_Check
-Updated logic for Function NIST800-53-VI-ESXi-CFG-00110
-Corrected typo with $global:Control_Array variable name
-Commented fn_Finalize_CSV in line 2118 in order to work around formatting issues. Please uncomment if needed.
-Deleted "Function Nothing" and "Function fn_Writer" as they were unused
-
-v1.3
-Updated to configure SSH Firewall to add and remove Appiance IP if necessary.
-
-v1.4
-Added Lockdown Mode Compatibility
-
-v1.4.2
-Fixed Add_IP and took out SSH start/stop loop. 
-
-v3.0
-Added additional vCenter Control Checks seperate from the ESXi checks.
-
-v3.1
-Implemented all documented ESXi Controls
-
-v3.2 added VCF scanner Function
-pull variables for inputs..yml and overwrite
-check authentication for all servers before running scanner
-
 v23_6_29 re-branded and NSX Scan Funciton active
-
-Set Environment Vars
 #>
 
+# Set / Clear all variables 
 $global:date = (Get-date).tostring('dd-MM-yyyy-hh-mm')
-
-$location =""
-
 $UserDomain = ""
-
-$ScanLoop = 0
-
 $global:allVM = ""
-
 $global:UnnecessaryHardware = "VirtualUSBController|VirtualUSBXHCIController|VirtualParallelPort|VirtualFloppy|VirtualSerialPort|VirtualHdAudioCard|VirtualAHCIController|VirtualEnsoniq1371|VirtualCdrom"
-  
-<#
-CONTROL LIBRARY
-  Each Control Funcition Sets the variables to collect the data for that control.
-    - Some controlls check multiple setting. Enter the commands seperately as command_1 and command_2
-    - The expected results are entered as xResult_1 and xResult_2 or the corresponding command.
-    - Enter all the acceptable results in the string seperated by a comma ['good result,another good result']
-#>
+$global:SDDCmgr = ""
+$global:sddcCreds = ""
+$global:defaultVIServer = ""
+$global:DefaultVIServers = ""
+$global:VCcreds = ""
+$global:NSXmgr = ""
+$global:ESXSSHCreds = ""
 
 Function fn_GetAppIP {
-
   If (Test-Path -Path /etc/systemd/network) {
-  # Pull IP Address from Photon OS Appliance
+# Pull IP Address from Photon OS Appliance for SSH Firewall  
   $global:AppIPaddress = Invoke-Expression "cat /etc/systemd/network/*.network | grep Address"
   $global:AppIPAddress = ($global:AppIPaddress |  Select-String -Pattern '\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b' -AllMatches).Matches.Value
-  Write-Host "IP=" $global:AppIPaddress
+  # Write-Host "IP=" $global:AppIPaddress
   }
-  elseif ($IsMacOS) {
-    # Need MacOS Powershell IP Grabber 
-  }
-  elseif ($IsWindows) {
-    # Need Windows Powershell IP Grabber 
-  }
-  # Set this variable when using the scipt stand-alone: 
-  # $global:AppIPaddress = "10.1.0.43"
 }
 
 Function fn_Welcome {
@@ -89,8 +41,10 @@ Environment Services:
 	- SFTP Server (IP or FQDN) [use vCenter info if unavailable]
 
 vCenter:
-  	- IP Address or FQDN of vCenter Server
-	- SSO Administrtor Account Credentials (administrator@vsphere.local)
+  - IP Address or FQDN of vCenter Server
+  - SSO Administrtor Account Credentials (administrator@vsphere.local)
+  - root account credentials for SSH operations.
+  - root BASH shell configured (https://kb.vmware.com/s/article/2100508)
 	
 vSphere (ESX):
 	- root credentials for SSH operations
@@ -107,9 +61,6 @@ NSX-T:
 	- SSH enabled on NSX Managers
 	- root account credentials for SSH operations
 	- admin account credentials for API operations
-    
-    
-    
     " -ForegroundColor Green
     fn_PressAnyKey
 }
@@ -118,8 +69,8 @@ Function fn_Lockdown_off {
     Write-Host "Disabling Lockdown Mode"
     $allHosts = Get-VMHost | Sort-Object Name
     foreach ($VMHost in $allHosts) {
-        Write-Host $VMHost
-        ($VMhost | Get-View).ExitLockdownMode()
+      Write-Host $VMHost
+      ($VMhost | Get-View).ExitLockdownMode()
     }
 }
 
@@ -127,130 +78,152 @@ Function fn_Lockdown_on {
     Write-Host "Enabling Lockdown Mode"
     $allHosts = Get-VMHost | Sort-Object Name
     foreach ($VMHost in $allHosts) {
-        Write-Host $VMHost
-        ($VMhost | Get-View).EnterLockdownMode()
+      Write-Host $VMHost
+      ($VMhost | Get-View).EnterLockdownMode()
     }
 }
+
+
+#########################################################################
+####################      STIG SCAN FUNCTINS      #######################
+#########################################################################
+
 Function fn_vcfscanner { 
   Write-Host "Running scan of VCF Environment:"
-  $jsonOutput = "VCF_Scan_"+$global:SDDCmgr+"_"+$global:date
+  Write-Host "Creds:"
+  Write-Host $env:VISERVER
+  Write-Host $env:VISERVER_USERNAME
+  Write-Host $env:VISERVER_PASSWORD
+  $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $command ='inspec exec ~/profiles/vmware-vcf-sddcmgr-4x-stig-baseline/. -t ssh://'+$global:SDDCuser+'@'+$global:SDDCmgr+' --password '''+$global:SDDCpass+''' --input-file=/root/profiles/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml --show-progress --reporter=cli json:./'+$jsonOutput
-  $result = Invoke-Expression $command.tostring()
+  $profilePath = '/root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+  $command = "inspec exec $profilePath/. -t ssh://'$global:SDDCuser'@'$global:SDDCmgr' --password '$global:SDDCpass' --input-file='$profilePath/inputs-vcf-sddc-mgr-4x.yml' --show-progress --reporter=cli json:.$jsonOutput"
+  Invoke-Expression $command
   Write-Host "VCF Scan Complete!"
   }
 
-  Function fn_nsxscanner { 
-    Write-Host "Running scan of NSX-T Environment:"
-    $jsonOutput = "NSX_Scan_"+$global:NSXTmgr+"_"+$global:date
-    Write-Host "Saving results to: "$jsonOutput
-    $command ='inspec exec ~/profiles/vmware-nsxt-3.x-stig-baseline-master/. -t ssh://'+$global:NSXTRootUser+'@'+$global:NSXTmgr+' --password '''+$global:NSXTRootPass+''' --input-file=/root/profiles/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:./'+$jsonOutput
-    Invoke-Expression $command.tostring()
-    Write-Host "NSX-T Scan Complete!"
-    }
+Function fn_ESXscanner { 
+  Write-Host "Running ESX Host Scan:"
+    $env:VISERVER=$global:defaultVIServer
+    $env:VISERVER_USERNAME=$global:VCuser
+    $env:VISERVER_PASSWORD=$global:VCpass
+    $env:NO_COLOR=$true
+  $jsonOutput = "./results/ESX_Scan_"+$global:date+".json"
+  Write-Host "Saving results to: "$jsonOutput
+  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+  $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+  Invoke-Expression $command
+  Write-Host "ESX Scan Complete!"
+}
+
+Function fn_nsxscanner { 
+  Write-Host "Running scan of NSX-T Environment:"
+  $jsonOutput = "./results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date+".json"
+  Write-Host "Saving results to: "$jsonOutput
+  $profilePath = "/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master"
+  $command ="inspec exec $profilePath/. -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file="+$profilePath+"/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:$jsonOutput"
+  Invoke-Expression $command
+  Write-Host "NSX-T Scan Complete!"
+}
+  
+Function fn_vCscanner { 
+  Write-Host "Running vCenter Scan Environment:"
+  $jsonOutput = "./results/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
+  Write-Host "Saving results to: "$jsonOutput
+  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vcsa/inspec/vmware-vcsa-"+$global:vCVersion[0]+".0-stig-baseline"
+  $command ="inspec exec $profilePath/. -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --show-progress --reporter=cli json:"+$jsonOutput
+  Invoke-Expression $command
+  Write-Host "vCenter Scan Complete!"
+}
 
 Function fn_SSH_Check {
-    # Check to see if SSH is already on and set a variable to leave it on after command is run.
-    $serviceStatus = Get-VMHostService -VMHost $VMHost | Where-Object {$_.Key -eq "TSM-SSH"} | Select-Object Running
-    if ($serviceStatus.Running) {return $true} else {return $false}
-    
-    }
+# Check to see if SSH is already on and set a variable to leave it on after command is run.
+  $serviceStatus = Get-VMHostService -VMHost $VMHost | Where-Object {$_.Key -eq "TSM-SSH"} | Select-Object Running
+  if ($serviceStatus.Running) {return $true} else {return $false}
+}
 
 Function fn_SSH_ON {
-
-        $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Start-VMHostService -Confirm:$false | Out-Null
-
-    }
+# Turn ESX Host SSH Service on
+  $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Start-VMHostService -Confirm:$false | Out-Null
+}
 
 Function fn_SSH_OFF {
-    
-        $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
-    
+# Turn ESX Host SSH Service OFF
+  $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
 }
 
 Function fn_SSH_Firewall_AddIP {
-
+# Add vSCAT Applicane IP to Host SSH Firewall
   fn_GetAppIP
-
   $allHosts = Get-VMHost | Sort-Object Name
-    foreach ($VMHost in $allHosts) {
+  foreach ($VMHost in $allHosts) {
+    Write-Host "Adding IP to $VMHost"
 
-      Write-Host "Adding IP to $VMHost"
-      # Is SSH Firewall Enabled
-      $SSHFirewall = (Get-VMHost -Name $VMHost) | Get-VMHostFirewallException  | Where {$_.Name -eq "SSH Server"} | Select-Object -ExpandProperty Enabled
-      $esxcli = Get-Esxcli -VMHost $VMHost
-      # If SSH Firewall is Enabled is there and IP Allowed List
-      Write-Host "IP Address= "$global:AppIPAddress
-      If ($SSHFirewall -eq "True") {
+# Check if Host SSH Firewall Enabled
+    $SSHFirewall = (Get-VMHost -Name $VMHost) | Get-VMHostFirewallException  | Where {$_.Name -eq "SSH Server"} | Select-Object -ExpandProperty Enabled
+    $esxcli = Get-Esxcli -VMHost $VMHost
 
-          $AllowedIPs = $esxcli.network.firewall.ruleset.allowedip.list("sshServer").AllowedIPAddresses
-
-          if ($AllowedIPs -eq "All") {
-              Write-Host "Allowed IPs: $AllowedIPs - No Changes Made"
-          }
-          if ($AllowedIPs -match $global:AppIPaddress) {
-              Write-Host "$global:AppIPaddress already exists in Allowed IPs - No Changes Made" -ForegroundColor Green
-          } else {
-              # Add the appliance IP to the Allowed IP Address List.  
-              $esxcli.network.firewall.ruleset.allowedip.add("$global:AppIPaddress", "sshServer") | Out-Null
-              Start-Sleep -Seconds 2
-              }
-          }
+# Check if SSH Firewall is Enabled is there and IP Allowed List
+    If ($SSHFirewall -eq "True") {
+      $AllowedIPs = $esxcli.network.firewall.ruleset.allowedip.list("sshServer").AllowedIPAddresses
+      if ($AllowedIPs -eq "All") {
+        # If All IPs Allowed- do nothing
+          Write-Host "Allowed IPs: $AllowedIPs - No Changes Made"
       }
+      if ($AllowedIPs -match $global:AppIPaddress) {
+          # If the appliance is already there- do nothing
+          Write-Host "$global:AppIPaddress already exists in Allowed IPs - No Changes Made" -ForegroundColor Green
+      } else {
+          # Add the appliance IP to the Allowed IP Address List.  
+          $esxcli.network.firewall.ruleset.allowedip.add("$global:AppIPaddress", "sshServer") | Out-Null
+          Start-Sleep -Seconds 2
+      }
+    }
+  }
 }
 
 Function fn_SSH_Firewall_RemoveIP {
   fn_GetAppIP
- 
   $allHosts = Get-VMHost | Sort-Object Name
-    foreach ($VMHost in $allHosts) {
+  foreach ($VMHost in $allHosts) {
+# Check if Host SSH Firewall Enabled
+    $SSHFirewall = (Get-VMHost -Name $VMHost) | Get-VMHostFirewallException  | Where {$_.Name -eq "SSH Server"} | Select-Object -ExpandProperty Enabled
+    $esxcli = Get-Esxcli -VMHost $VMHost
 
-      # Is SSH Firewall Enabled
-      $SSHFirewall = (Get-VMHost -Name $VMHost) | Get-VMHostFirewallException  | Where {$_.Name -eq "SSH Server"} | Select-Object -ExpandProperty Enabled
-      $esxcli = Get-Esxcli -VMHost $VMHost
-      # If SSH Firewall is Enabled is there and IP Allowed List
-      If ($SSHFirewall -eq "True") {
-
-          $AllowedIPs = $esxcli.network.firewall.ruleset.allowedip.list("sshServer").AllowedIPAddresses
-
-          if ($AllowedIPs -eq "All") {
-              Write-Host "Allowed IPs: $AllowedIPs - No Changes Made"
-          }
-          if ($AllowedIPs -match $global:AppIPaddress) {
-              Write-Host "Removing $global:AppIPaddress from $VMHost Firewall" -ForegroundColor Green
-              $esxcli.network.firewall.ruleset.allowedip.remove("$global:AppIPaddress", "sshServer") | Out-Null
-              Start-Sleep -Seconds 2
-          } else {
-              Write-Host "$global:AppIPaddress does not exists in Allowed IPs - No Changes Made" -ForegroundColor Green
-              }
+# If SSH Firewall is Enabled is there and IP Allowed List
+    If ($SSHFirewall -eq "True") {
+      $AllowedIPs = $esxcli.network.firewall.ruleset.allowedip.list("sshServer").AllowedIPAddresses
+      if ($AllowedIPs -eq "All") {
+        # If All IPs Allowed- do nothing
+          Write-Host "Allowed IPs: $AllowedIPs - No Changes Made"
+      }
+      if ($AllowedIPs -match $global:AppIPaddress) {
+        # If the appliance is listed remove it from the list. 
+          Write-Host "Removing $global:AppIPaddress from $VMHost Firewall" -ForegroundColor Green
+          $esxcli.network.firewall.ruleset.allowedip.remove("$global:AppIPaddress", "sshServer") | Out-Null
+          Start-Sleep -Seconds 2
+      } else {
+        # If the appliance isn't on the list- do nothing
+          Write-Host "$global:AppIPaddress does not exists in Allowed IPs - No Changes Made" -ForegroundColor Green
           }
       }
+    }
 }
 
 Function fn_Write_Results_to_CSV {
-
-    $csv = Import-Csv $global:csvFile
-
-    # Loop through all the CSV rows and insert a new column and array data (if available)
-    for ($i = 0; $i -lt $csv.Count; $i++) {
-        $value = if ($i -lt $global:result_array.Count) { $global:result_array[$i] } else { $null }
-        $csv[$i] | Add-Member -MemberType NoteProperty -Name $global:result_array[0] -Value $value -Force
-    }
-
-    # Export CSV file
-    $csv | Export-Csv -Path $global:csvFile -NoTypeInformation -Force
-}
-Function fn_Finalize_CSV {
-    $skipone = get-content $global:csvFile |
-        select -skip 1 |
-    convertfrom-csv
-
-    $skipone | export-csv $global:csvFile -notypeinformation
+  $csv = Import-Csv $global:csvFile
+# Loop through all the CSV rows and insert a new column and array data (if available)
+  for ($i = 0; $i -lt $csv.Count; $i++) {
+      $value = if ($i -lt $global:result_array.Count) { $global:result_array[$i] } else { $null }
+      $csv[$i] | Add-Member -MemberType NoteProperty -Name $global:result_array[0] -Value $value -Force
+  }
+# Export the updated CSV file
+  $csv | Export-Csv -Path $global:csvFile -NoTypeInformation -Force
 }
 
-                                      #########################################################################
-                                      ################      vCENTER CONTROL FUNCTIONS      ####################
-                                      #########################################################################
+#########################################################################
+################      vCENTER CONTROL FUNCTIONS      ####################
+#########################################################################
 
 Function GET-vCENTER-VERSION {
   $global:VMWConfig='vCenter Version'
@@ -260,17 +233,12 @@ Function GET-vCENTER-VERSION {
   $global:xResult='7'
   $global:command='$Global:DefaultVIServers.version'
   fn_Print_vCenter_Control_Info
-
-    $result = Invoke-Expression $global:command.tostring()
-
-      Write-Host $Global:DefaultVIServers -NoNewLine
-
-      if ($result -lt $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
-
-      Write-Host `t`t`t$result -ForegroundColor $fgColor
-
-      $global:result_array = $global:result_array+$result
-  }
+  $result = Invoke-Expression $global:command.tostring()
+  Write-Host $Global:DefaultVIServers -NoNewLine
+  if ($result -lt $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
+  Write-Host `t`t`t$result -ForegroundColor $fgColor
+  $global:result_array = $global:result_array+$result
+}
 
 Function GET-vCENTER-BUILD {
   $global:VMWConfig='vCenter Build'
@@ -280,17 +248,12 @@ Function GET-vCENTER-BUILD {
   $global:xResult='Consistant'
   $global:command='$Global:DefaultVIServers.build'
   fn_Print_vCenter_Control_Info
-
-    $result = Invoke-Expression $global:command.tostring()
-
-      Write-Host $Global:DefaultVIServers -NoNewLine
-
-      if ($result -lt $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
-
-      Write-Host `t`t`t$result -ForegroundColor $fgColor
-
-      $global:result_array = $global:result_array+$result
-  }
+  $result = Invoke-Expression $global:command.tostring()
+  Write-Host $Global:DefaultVIServers -NoNewLine
+  if ($result -lt $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
+  Write-Host `t`t`t$result -ForegroundColor $fgColor
+  $global:result_array = $global:result_array+$result
+}
 
 Function NIST800-53-VI-VC-CFG-00415 {
   $global:VMWConfig='NIST800-53-VI-VC-CFG-00415'
@@ -299,18 +262,12 @@ Function NIST800-53-VI-VC-CFG-00415 {
   $global:finding='The vCenter Server users must have the correct roles assigned.'
   $global:xResult='Limit Administrative roles to specific users'
   $global:command='Get-VIPermission | Sort Role | Select Role,Principal,Entity,Propagate,IsGroup | FT -Auto'
-
   fn_Print_vCenter_Control_Info
-
-  Get-VIPermission | Sort-Object Role | Select-Object Role,Principal,Entity,Propagate,IsGroup | Out-File "$($defaultVIServer) - $($date) - vC VIPUserList.txt"
-
+  Get-VIPermission | Sort-Object Role | Select-Object Role,Principal,Entity,Propagate,IsGroup | Out-File "./results/$($defaultVIServer) - $($date) - vC VIPUserList.txt"
   Write-Host $Global:DefaultVIServers -NoNewLine
-
   $result="See vC VIPUserList.txt"
   Write-Host `t`t`t$result
-
   $global:result_array = $global:result_array+$result
-
 }
 
 Function NIST800-53-VI-VC-CFG-00404 {
@@ -321,17 +278,12 @@ Function NIST800-53-VI-VC-CFG-00404 {
   $global:xResult='info'
   $global:command='(Get-AdvancedSetting -Entity $Global:DefaultVIServers -Name config.log.level | Select Value).value'
   fn_Print_vCenter_Control_Info
-
-        $result = Invoke-Expression $global:command.tostring()
-
-        Write-Host $Global:DefaultVIServers -NoNewLine
-
-        if ($result -eq $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
-
-        Write-Host `t`t`t$result -ForegroundColor $fgColor
-
-        $global:result_array = $global:result_array+$result
-    }
+  $result = Invoke-Expression $global:command.tostring()
+  Write-Host $Global:DefaultVIServers -NoNewLine
+  if ($result -eq $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
+  Write-Host `t`t`t$result -ForegroundColor $fgColor
+  $global:result_array = $global:result_array+$result
+}
 
 Function NIST800-53-VI-VC-CFG-00405 {
   $global:VMWConfig='NIST800-53-VI-VC-CFG-00405'
@@ -341,50 +293,39 @@ Function NIST800-53-VI-VC-CFG-00405 {
   $global:xResult='False'
   $global:command='Get-VDSwitch | Get-VDSecurityPolicy & Get-VDPortgroup | Get-VDSecurityPolicy'
   fn_Print_vCenter_Control_Info
-
   $VDSTitle =  "Distributed Switches:"
   $dataFeed = '="'+$VDSTitle+'"&CHAR(10)&"'
   Write-Host $VDSTitle
-    $allVDS = Get-VDSwitch | Sort-Object Name
-    foreach ($VDS in $allVDS) {
-
-      $VDS = $VDS.tostring()
-
-      Write-Host $VDS":" -NoNewline
-
-      $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
-      $VDS = $VDS.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-
-      if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
-      if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
-    }
+  $allVDS = Get-VDSwitch | Sort-Object Name
+  foreach ($VDS in $allVDS) {
+    $VDS = $VDS.tostring()
+    Write-Host $VDS":" -NoNewline
+    $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
+    $VDS = $VDS.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
+    if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
+  }
   Write-Host 
   $dataFeed += '---"&CHAR(10)&'
   $VDPGTitle = "Distributed Port Groups:"
   Write-Host $VDPHTitle
   $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"'
- 
-    $allVPG = Get-VDPortgroup | Sort-Object Name
-    foreach ($VDPG in $allVPG) {
-
-      Write-Host $VDPG":" -NoNewline
-
-      $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
-      $VDPG = $VDPG.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-      if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
-    }
-    $dataFeed += '---"'
-  
+  $allVPG = Get-VDPortgroup | Sort-Object Name
+  foreach ($VDPG in $allVPG) {
+    Write-Host $VDPG":" -NoNewline
+    $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
+    $VDPG = $VDPG.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
+  }
+  $dataFeed += '---"'
   $global:result_array = $global:result_array+$dataFeed
 }
 
@@ -396,50 +337,39 @@ Function NIST800-53-VI-VC-CFG-00407 {
   $global:xResult='False'
   $global:command='Get-VDSwitch | Get-VDSecurityPolicy & Get-VDPortgroup | Get-VDSecurityPolicy'
   fn_Print_vCenter_Control_Info
-
   $VDSTitle =  "Distributed Switches:"
   $dataFeed = '="'+$VDSTitle+'"&CHAR(10)&"'
   Write-Host $VDSTitle
-    $allVDS = Get-VDSwitch | Sort-Object Name
-    foreach ($VDS in $allVDS) {
-
-      $VDS = $VDS.tostring()
-
-      Write-Host $VDS":" -NoNewline
-
-      $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
-      $VDS = $VDS.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-
-      if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
-      if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
-    }
+  $allVDS = Get-VDSwitch | Sort-Object Name
+  foreach ($VDS in $allVDS) {
+    $VDS = $VDS.tostring()
+    Write-Host $VDS":" -NoNewline
+    $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty AllowPromiscuous
+    $VDS = $VDS.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
+    if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
+  }
   Write-Host 
   $dataFeed += '---"&CHAR(10)&'
   $VDPGTitle = "Distributed Port Groups:"
   Write-Host $VDPHTitle
-  $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"'
- 
-    $allVPG = Get-VDPortgroup | Sort-Object Name
-    foreach ($VDPG in $allVPG) {
-
-      Write-Host $VDPG":" -NoNewline
-
-      $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty MacChanges
-      $VDPG = $VDPG.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-      if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
-    }
-    $dataFeed += '---"'
-  
+  $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"' 
+  $allVPG = Get-VDPortgroup | Sort-Object Name
+  foreach ($VDPG in $allVPG) {
+    Write-Host $VDPG":" -NoNewline
+    $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty MacChanges
+    $VDPG = $VDPG.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
+  }
+  $dataFeed += '---"' 
   $global:result_array = $global:result_array+$dataFeed
 }
 
@@ -451,49 +381,39 @@ Function NIST800-53-VI-VC-CFG-00417 {
   $global:xResult='Site Specific'
   $global:command='(Get-VDSwitch -Name <VDS>).ExtensionData.config.IpfixConfig.CollectorIpAddress '
   fn_Print_vCenter_Control_Info
-
   $VDSTitle =  "Distributed Switches:"
   $dataFeed = '="'+$VDSTitle+'"&CHAR(10)&"'
   Write-Host $VDSTitle
-    $allVDS = Get-VDSwitch | Sort-Object Name
-    foreach ($VDS in $allVDS) {
-
-      $VDS = $VDS.tostring()
-
-      Write-Host $VDS":" -NoNewline
-
-      $result = (Get-VDSwitch -Name $VDS).ExtensionData.config.IpfixConfig.CollectorIpAddress 
-      $VDS = $VDS.tostring()
-      if (!$result) {$result = "Not Set"}
-      if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
-      if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t`t $result
-
-      $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
-    }
+  $allVDS = Get-VDSwitch | Sort-Object Name
+  foreach ($VDS in $allVDS) {
+    $VDS = $VDS.tostring()
+    Write-Host $VDS":" -NoNewline
+    $result = (Get-VDSwitch -Name $VDS).ExtensionData.config.IpfixConfig.CollectorIpAddress 
+    $VDS = $VDS.tostring()
+    if (!$result) {$result = "Not Set"}
+    if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
+    if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t`t $result
+    $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
+  }
   Write-Host 
   $dataFeed += '---"&CHAR(10)&'
   $VDPGTitle = "Distributed Port Groups:"
   Write-Host $VDPHTitle
-  $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"'
- 
-    $allVPG = Get-VDPortgroup | Sort-Object Name
-    foreach ($VDPG in $allVPG) {
-
-      Write-Host $VDPG":" -NoNewline
-
-      $result = (Get-VDPortgroup -Name $VDPG).ExtensionData.config.IpfixConfig.CollectorIpAddress 
-      $VDPG = $VDPG.tostring()
-      if (!$result) {$result = "Not Set"}
-      if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t $result 
-
-      $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
-    }
-    $dataFeed += '---"'
-  
+  $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"' 
+  $allVPG = Get-VDPortgroup | Sort-Object Name
+  foreach ($VDPG in $allVPG) {
+    Write-Host $VDPG":" -NoNewline
+    $result = (Get-VDPortgroup -Name $VDPG).ExtensionData.config.IpfixConfig.CollectorIpAddress 
+    $VDPG = $VDPG.tostring()
+    if (!$result) {$result = "Not Set"}
+    if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t $result 
+    $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
+  }
+  $dataFeed += '---"'
   $global:result_array = $global:result_array+$dataFeed
 }
 
@@ -505,17 +425,14 @@ Function NIST800-53-VI-VC-CFG-00420 {
   $global:xResult='No Name with "vsanDatastore"'
   $global:command='Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}'
   fn_Print_vCenter_Control_Info
-
   If($(Get-Cluster | Where-Object {$_.VsanEnabled} | Measure-Object).Count -gt 0){
     $result = "vSAN Enabled Cluster found. See NIST800-53-VI-VC-CFG-00420.txt file."
-    (Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}) >> NIST800-53-VI-VC-CFG-00420.txt
+    (Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}) >> ./results/NIST800-53-VI-VC-CFG-00420.txt
     }
-    else{
-    $result = "vSAN is not enabled, this finding is not applicable" 
-    }
-  
+    else { 
+      $result = "vSAN is not enabled, this finding is not applicable" 
+  }
   Write-Host "Result: "$result
-  
   $global:result_array = $global:result_array+$result
 }
 
@@ -527,50 +444,39 @@ Function NIST800-53-VI-VC-CFG-00450 {
   $global:xResult='False'
   $global:command='Get-VDSwitch | Get-VDSecurityPolicy & Get-VDPortgroup | Get-VDSecurityPolicy'
   fn_Print_vCenter_Control_Info
-
   $VDSTitle =  "Distributed Switches:"
   $dataFeed = '="'+$VDSTitle+'"&CHAR(10)&"'
   Write-Host $VDSTitle
-    $allVDS = Get-VDSwitch | Sort-Object Name
-    foreach ($VDS in $allVDS) {
-
-      $VDS = $VDS.tostring()
-
-      Write-Host $VDS":" -NoNewline
-
-      $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
-      $VDS = $VDS.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-
-      if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
-      if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
-    }
+  $allVDS = Get-VDSwitch | Sort-Object Name
+  foreach ($VDS in $allVDS) {
+    $VDS = $VDS.tostring()
+    Write-Host $VDS":" -NoNewline
+    $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
+    $VDS = $VDS.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
+    if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
+  }
   Write-Host 
   $dataFeed += '---"&CHAR(10)&'
   $VDPGTitle = "Distributed Port Groups:"
   Write-Host $VDPHTitle
   $dataFeed += '"'+$VDPGTitle+'"&CHAR(10)&"'
- 
-    $allVPG = Get-VDPortgroup | Sort-Object Name
-    foreach ($VDPG in $allVPG) {
-
-      Write-Host $VDPG":" -NoNewline
-
-      $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
-      $VDPG = $VDPG.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-      if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
-      if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
-    }
-    $dataFeed += '---"'
-  
+  $allVPG = Get-VDPortgroup | Sort-Object Name
+  foreach ($VDPG in $allVPG) {
+    Write-Host $VDPG":" -NoNewline
+    $result = Get-VDPortgroup -Name $VDPG | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
+    $VDPG = $VDPG.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDPG.length -lt 20) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 11) {Write-Host  `t -NoNewline}
+    if ($VDPG.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDPG+':  '+$result+'"&CHAR(10)&"'
+  }
+  $dataFeed += '---"' 
   $global:result_array = $global:result_array+$dataFeed
 }
 
@@ -582,16 +488,11 @@ Function NIST800-53-VI-VC-CFG-00428 {
   $global:xResult='30'
   $global:command='(Get-AdvancedSetting -Entity $Global:DefaultVIServers -Name VirtualCenter.VimPasswordExpirationInDays).value'
   fn_Print_vCenter_Control_Info
-
-    $result = Invoke-Expression $global:command.tostring()
-
-    Write-Host $Global:DefaultVIServers -NoNewLine
-
-    if ($result -eq $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
-
-    Write-Host `t`t`t$result -ForegroundColor $fgColor
-
-    $global:result_array = $global:result_array+$result
+  $result = Invoke-Expression $global:command.tostring()
+  Write-Host $Global:DefaultVIServers -NoNewLine
+  if ($result -eq $xresult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen utput based on expected result
+  Write-Host `t`t`t$result -ForegroundColor $fgColor
+  $global:result_array = $global:result_array+$result
 }
 
 Function NIST800-53-VI-VC-CFG-01200 {
@@ -602,27 +503,21 @@ Function NIST800-53-VI-VC-CFG-01200 {
   $global:xResult='False'
   $global:command='((Get-VDSwitch -Name $VDS).ExtensionData.Config.HealthCheckConfig) | Select-Object -ExpandProperty Enable'
   fn_Print_vCenter_Control_Info
-
   $VDSTitle =  "Distributed Switches:"
   $dataFeed = '="'+$VDSTitle+'"&CHAR(10)&"'
   Write-Host $VDSTitle
-    $allVDS = Get-VDSwitch | Sort-Object Name
-    foreach ($VDS in $allVDS) {
-
-      $VDS = $VDS.tostring()
-
-      Write-Host $VDS":" -NoNewline
-
-      $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
-      $VDS = $VDS.tostring()
-      if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
-
-      if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
-      if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
-      Write-Host `t`t`t $result -ForegroundColor $fgColor
-
-      $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
-    }
+  $allVDS = Get-VDSwitch | Sort-Object Name
+  foreach ($VDS in $allVDS) {
+    $VDS = $VDS.tostring()
+    Write-Host $VDS":" -NoNewline
+    $result = Get-VDSwitch -Name $VDS | Get-VDSecurityPolicy | Select-Object -ExpandProperty ForgedTransmits
+    $VDS = $VDS.tostring()
+    if ($result -eq "True") {$fgColor = "Red"} else {$fgColor = "White"}
+    if ($VDS.length -lt 11) {Write-Host `t -NoNewLine}
+    if ($VDS.length -lt 8) {Write-Host  `t -NoNewline}
+    Write-Host `t`t`t $result -ForegroundColor $fgColor
+    $dataFeed += " -"+$VDS+':  '+$result+'"&CHAR(10)&"'
+  }
   $dataFeed +='"'
   $global:result_array = $global:result_array+$dataFeed
 }
@@ -763,7 +658,7 @@ Function NIST800-53-VI-VC-CFG-01210 {
 
   fn_Print_vCenter_Control_Info
 
-  Get-VIPermission | Where {$_.Role -eq 'Admin'} | Select Role,Principal,Entity,Propagate,IsGroup | FT -Auto | Out-File "$($defaultVIServer) - $($date) - vC CryptoUserList.txt"
+  Get-VIPermission | Where {$_.Role -eq 'Admin'} | Select Role,Principal,Entity,Propagate,IsGroup | FT -Auto | Out-File "./results/$($defaultVIServer) - $($date) - vC CryptoUserList.txt"
 
   Write-Host $Global:DefaultVIServers -NoNewLine
 
@@ -938,7 +833,7 @@ Function NIST800-53-VI-ESXi-CFG-00003 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -951,7 +846,7 @@ Function NIST800-53-VI-ESXi-CFG-00003 {
         fn_SSH_OFF
       } else {
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -983,7 +878,7 @@ Function NIST800-53-VI-ESXi-CFG-00004 {
           fn_SSH_ON
           
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -999,7 +894,7 @@ Function NIST800-53-VI-ESXi-CFG-00004 {
       else
       {
     
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
           Write-Host $VMHost -NoNewLine
@@ -1030,7 +925,7 @@ Function NIST800-53-VI-ESXi-CFG-00005 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1047,7 +942,7 @@ Function NIST800-53-VI-ESXi-CFG-00005 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1079,7 +974,7 @@ Function NIST800-53-VI-ESXi-CFG-00006 {
     {
         fn_SSH_ON
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1096,7 +991,7 @@ Function NIST800-53-VI-ESXi-CFG-00006 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1128,7 +1023,7 @@ Function NIST800-53-VI-ESXi-CFG-00007 {
     {
         fn_SSH_ON
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1145,7 +1040,7 @@ Function NIST800-53-VI-ESXi-CFG-00007 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1177,7 +1072,7 @@ Function NIST800-53-VI-ESXi-CFG-00011 {
     {
         fn_SSH_ON
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1194,7 +1089,7 @@ Function NIST800-53-VI-ESXi-CFG-00011 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1226,7 +1121,7 @@ Function NIST800-53-VI-ESXi-CFG-00012 {
     {
         fn_SSH_ON
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1243,7 +1138,7 @@ Function NIST800-53-VI-ESXi-CFG-00012 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1275,7 +1170,7 @@ Function NIST800-53-VI-ESXi-CFG-00013 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1292,7 +1187,7 @@ Function NIST800-53-VI-ESXi-CFG-00013 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1324,7 +1219,7 @@ Function NIST800-53-VI-ESXi-CFG-00014 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1341,7 +1236,7 @@ Function NIST800-53-VI-ESXi-CFG-00014 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1373,7 +1268,7 @@ Function NIST800-53-VI-ESXi-CFG-00016 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1390,7 +1285,7 @@ Function NIST800-53-VI-ESXi-CFG-00016 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1422,7 +1317,7 @@ Function NIST800-53-VI-ESXi-CFG-00017 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1439,7 +1334,7 @@ Function NIST800-53-VI-ESXi-CFG-00017 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1471,7 +1366,7 @@ Function NIST800-53-VI-ESXi-CFG-00018 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1488,7 +1383,7 @@ Function NIST800-53-VI-ESXi-CFG-00018 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1737,7 +1632,7 @@ Function NIST800-53-VI-ESXi-CFG-00110 {
     {
         fn_SSH_ON
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result1 = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
         $result2 = Out-String -InputObject $result1
         $result3 = $result2.trim()
@@ -1757,7 +1652,7 @@ Function NIST800-53-VI-ESXi-CFG-00110 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result1 = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
         $result2 = Out-String -InputObject $result1
         $result3 = $result2.trim()
@@ -1923,7 +1818,7 @@ Function NIST800-53-VI-ESXi-CFG-00124 {
     {
         fn_SSH_ON
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -1940,7 +1835,7 @@ Function NIST800-53-VI-ESXi-CFG-00124 {
     {
   
 
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
         $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2008,7 +1903,7 @@ Function NIST800-53-VI-ESXi-CFG-00129 {
 
     }
 
-    $List | Export-Csv -Path "$($defaultVIServer) - $($date) - ESXi Patches.csv" -NoTypeInformation
+    $List | Export-Csv -Path "./results/$($defaultVIServer) - $($date) - ESXi Patches.csv" -NoTypeInformation
 
   }
 }
@@ -2398,7 +2293,7 @@ Function NIST800-53-VI-ESXi-CFG-01100 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2415,7 +2310,7 @@ Function NIST800-53-VI-ESXi-CFG-01100 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2519,7 +2414,7 @@ Function NIST800-53-VI-ESXi-CFG-01108 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2536,7 +2431,7 @@ Function NIST800-53-VI-ESXi-CFG-01108 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2616,7 +2511,7 @@ Function NIST800-53-VI-ESXi-CFG-01111 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2633,7 +2528,7 @@ Function NIST800-53-VI-ESXi-CFG-01111 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2666,7 +2561,7 @@ Function NIST800-53-VI-ESXi-CFG-01112 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
             $result = $result -replace '\s+', '|'
@@ -2684,7 +2579,7 @@ Function NIST800-53-VI-ESXi-CFG-01112 {
       {
     
 
-          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+          $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
           $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2865,7 +2760,7 @@ Function NIST800-53-VI-ESXi-CFG-01113 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
 
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
@@ -2878,7 +2773,7 @@ Function NIST800-53-VI-ESXi-CFG-01113 {
         fn_SSH_OFF
       } else {
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2910,7 +2805,7 @@ Function NIST800-53-VI-ESXi-CFG-01113 {
       {
           fn_SSH_ON
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -2923,7 +2818,7 @@ Function NIST800-53-VI-ESXi-CFG-01113 {
         fn_SSH_OFF
       } else {
 
-            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true
+            $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true
             $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
 
@@ -3874,9 +3769,9 @@ Function fn_RequestSDDCToken {
   $global:accessToken = $APITokenArray[3]
   $global:refreshToken = $APITokenArray[9]
   Write-Host "Building VCF YAML files..." -ForegroundColor Green
-  $command = 'mv ~/profiles/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml ~/profiles/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml.bak'
+  $command = 'mv /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml.bak'
   Invoke-Expression $command
-  Add-Content  -Path ~/profiles/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml -Value "
+  Add-Content  -Path /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml -Value "
   # NGINX
   nginx_conf_path: /etc/nginx/nginx.conf
   limit_conn_ip_limit: '100'
@@ -3898,109 +3793,11 @@ Function fn_RequestSDDCToken {
   fn_PressAnyKey
 }
 
-Function fn_getNSXCreds {
-  Clear-Host
-  Write-Host "NSX-T Manager Information:" -ForegroundColor Green 
-  Write-Host
-  Write-Host "Enter the IP Address or FQDN of the NSX-T Manager: " -ForegroundColor Green -NoNewLine
-  $global:NSXTmgr = Read-Host
-  Write-Host
-  Write-Host "Testing ability to find $global:NSXTmgr..."
-  if (!(Test-Connection -ComputerName $global:NSXTmgr -Quiet -Count 2)) {
-      Write-Host "Unable to find $global:NSXTmgr " -ForegroundColor Red
-      Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
-      Write-host
-      fn_PressAnyKey
-      fn_Quit
-  } 
-  Write-Host "Connectivity to $global:NSXTmgr verified." -ForegroundColor Green
-  Write-Host
-  Write-Host "!! " -ForegroundColor Red -NoNewLine 
-  Write-Host "This process requires ROOT for SSH and ADMIN for API access to the NSX-T Manager " -ForegroundColor Green -NoNewLine
-  Write-Host "!!" -ForegroundColor Red
-  Write-Host
-  Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the NSX-T Manager and verify " -ForegroundColor Green -NoNewLine
-  Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
-  Write-Host " should be set to " -ForegroundColor Green -NoNewLine
-  Write-Host "'yes'"-ForegroundColor Yellow
-  Write-Host
-  Write-Host "Enter the " -ForegroundColor Green -NoNewline
-  Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
-  Write-Host " Credentials for $global:NSXTmgr" -ForegroundColor Green
-  $global:NSXTRootCreds = Get-Credential
-  $global:NSXTRootUser= $NSXTRootCreds.UserName.ToString()
-  $global:NSXTRootPass = $NSXTRootCreds.GetNetworkCredential().password
-  Write-Host
-  Write-Host "Verifying SSH to NSX-T Manager $global:NSXTmgr:"
-
-  $SSHCommand = New-SSHSession -ComputerName $global:NSXTmgr -Credential $global:NSXTRootCreds -AcceptKey:$true -ErrorAction Stop
-  $command = 'ls'
-  $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
-
-  Write-Host "NSX-T Manager SSH Test Successful" -ForegroundColor Green
-
-  Write-Host
-  Write-Host "Enter the " -ForegroundColor Green -NoNewline
-  Write-Host "ADMIN" -ForegroundColor Yellow -NoNewline
-  Write-Host " Credentials for $global:NSXTmgr" -ForegroundColor Green
-  $global:NSXTAdminCreds = Get-Credential
-  $global:NSXTAdminUser= $NSXTAdminCreds.UserName.ToString()
-  $global:NSXTAdminPass = $NSXTAdminCreds.GetNetworkCredential().password
-  Write-Host
-  fn_RequestNSXToken
-}
-
-Function fn_GetSddcCreds {
-Clear-Host
-$global:sddcEnv ="Y"
-Write-Host "SDDC Manager Information:" -ForegroundColor Green 
-Write-Host
-Write-Host "Enter the IP Address or FQDN of the SDDC Manager: " -ForegroundColor Green -NoNewLine
-$global:SDDCmgr = Read-Host
-Write-Host
-Write-Host "Testing ability to find $global:SDDCmgr..."
-  if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
-    Write-Host "Unable to find $global:SDDCmgr " -ForegroundColor Red
-    Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
-    Write-host
-    fn_PressAnyKey
-    fn_GetSddcCreds
-  } 
-
-Write-Host "Connectivity to $global:SDDCmgr verified." -ForegroundColor Green
-Write-Host
-Write-Host "!! " -ForegroundColor Red -NoNewLine 
-Write-Host "This process requires SSH ROOT access to the SDDC Manager " -ForegroundColor Green -NoNewLine
-Write-Host "!!" -ForegroundColor Red
-Write-Host
-Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the SDDC Manager and verify " -ForegroundColor Green -NoNewLine
-Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
-Write-Host " should be set to " -ForegroundColor Green -NoNewLine
-Write-Host "'yes'"-ForegroundColor Yellow
-Write-Host
-Write-Host
-Write-Host "Enter the root Credentials for $global:SDDCmgr" -ForegroundColor Green
-  $global:sddcCreds = Get-Credential
-  $global:SDDCuser= $sddcCreds.UserName.ToString()
-  $global:SDDCpass = $sddcCreds.GetNetworkCredential().password
-Write-Host
-Write-Host "Verifying SSH to SDDC Manager $global:SDDCmgr:"
-
-  $SSHCommand = New-SSHSession -ComputerName $global:SDDCmgr -Credential $global:sddcCreds -AcceptKey:$true -ErrorAction Stop
-  $command = 'shell; uptime -s'
-  $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
-
-Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
-Write-Host
-fn_PressAnyKey
-}
-
 Function fn_RequestNSXToken {
   Clear-Host
-  Write-Host "Preparing NSX-T Manager API Token..."
-  Write-Host
-  $uri = "https://$global:NSXTmgr/api/session/create" # Set URI for executing an API call to validate authentication
-  $command = "curl -k -c cookies.txt -D headers.txt -X POST -d 'j_username=$global:NSXTAdminUser&j_password=$global:NSXTAdminPass' $uri"
+  Write-Host "Preparing NSX-T Manager API Token..." -ForegroundColor Green
+  $uri = "https://$global:NSXmgr/api/session/create" # Set URI for executing an API call to validate authentication
+  $command = "curl -k -s -c cookies.txt -D headers.txt -X POST -d 'j_username=$global:NSXTAdminUser&j_password=$global:NSXTAdminPass' $uri"
   Invoke-Expression $command
   $file_data = Get-Content headers.txt | select -first 2 -skip 1
   $global:jsessionid = $file_data[0] -replace ".*JSESSIONID=" -replace "\; Path=.*" -replace "X-XSRF.*"
@@ -4012,11 +3809,11 @@ Function fn_RequestNSXToken {
   $command = "rm headers.txt"  
   Invoke-Expression $command
   Write-Host "Building YAML files..." -ForegroundColor Green
-  $command= 'mv ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.bak'
+  $command= 'mv /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.bak'
   Invoke-Expression $command
-  Add-Content  -Path ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml -Value "
+  Add-Content  -Path /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml -Value "
   # General
-  nsxManager: '$global:NSXTmgr'
+  nsxManager: '$global:NSXmgr'
   sessionToken: '$global:xxsrftoken'
   sessionCookieId: 'JSESSIONID=$global:jsessionid'
   # Manager
@@ -4031,9 +3828,9 @@ Function fn_RequestNSXToken {
   t0dhcplist: []
   t1dhcplist: []
   t1multicastlist: [] "
-  $command= 'mv ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inspec.yml ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inspec.bak'
+  $command= 'mv /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.yml /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.bak'
   Invoke-Expression $command
-  Add-Content  -Path ~/profiles/vmware-nsxt-3.x-stig-baseline-master/inspec.yml -Value "
+  Add-Content  -Path /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.yml -Value "
   name: vmware-nsxt-3.0-stig-inspec-baseline
   title: VMware NSX-T STIG InSpec Profile
   maintainer: The Authors
@@ -4046,7 +3843,7 @@ Function fn_RequestNSXToken {
   inputs:
   - name: nsxManager
     type: string
-    value: '$global:NSXTmgr'
+    value: '$global:NSXmgr'
     description: 'IP or FQDN of NSX-T Manager'
   # We use session based authentication in this profile to avoid username/pass   See https://developer.vmware.com/apis/1248/nsx-t on how to generate the session token and you will also need the JSESSIONID cookie
   - name: sessionToken
@@ -4084,46 +3881,251 @@ Function fn_RequestNSXToken {
   fn_PressAnyKey
 }
 
+Function fn_getNSXCreds {
+  Clear-Host
+  if ($global:NSXmgr -eq '') {
+    Write-Host "NSX-T Manager Information:" -ForegroundColor Green 
+    Write-Host
+    Write-Host "Enter the IP Address or FQDN of the NSX-T Manager: " -ForegroundColor Green -NoNewLine
+    $global:NSXmgr = Read-Host
+    Write-Host
+    Write-Host "Testing ability to find $global:NSXmgr..."
+    if (!(Test-Connection -ComputerName $global:NSXmgr -Quiet -Count 2)) {
+      Write-Host "Unable to find $global:NSXmgr " -ForegroundColor Red
+      Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+      Write-host
+      fn_PressAnyKey
+      fn_getNSXCreds
+    } 
+    Write-Host "Connectivity to $global:NSXmgr verified." -ForegroundColor Green
+    Write-Host
+  } else {
+    Write-Host "You are currently connected to NSX Manager" -ForegroundColor Green -NoNewline
+    Write-Host $global:NSXmgr -ForegroundColor Yellow
+    Write-Host
+    Write-Host "Change NSX Manager (Y/N)?" -NoNewline
+    $ChangeNSXMgr = Read-Host
+    if ($ChangeNSXMgr -eq 'Y') {
+      $global:NSXmgr = ''
+      fn_GetESXCreds
+    }
+  }
+
+  DO {
+    Clear-Host
+    Write-Host "!! " -ForegroundColor Red -NoNewLine 
+    Write-Host "This process requires ROOT for SSH and ADMIN for API access to the NSX-T Manager " -ForegroundColor Green -NoNewLine
+    Write-Host "!!" -ForegroundColor Red
+    Write-Host
+    Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the NSX-T Manager and verify " -ForegroundColor Green -NoNewLine
+    Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+    Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+    Write-Host "'yes'"-ForegroundColor Yellow
+    Write-Host
+    Write-Host "Enter the " -ForegroundColor Green -NoNewline
+    Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
+    Write-Host " Credentials for $global:NSXmgr" -ForegroundColor Green
+    $global:NSXRootCreds = Get-Credential
+    $global:NSXRootUser= $global:NSXRootCreds.UserName.ToString()
+    $global:NSXRootPass = $global:NSXRootCreds.GetNetworkCredential().password
+    Write-Host
+    Write-Host "Verifying SSH to NSX-T Manager $global:NSXmgr :"
+    $global:NSXSSHConection = New-SSHSession -ComputerName $global:NSXmgr -Credential $global:NSXRootCreds -AcceptKey:$true -ErrorAction ignore
+    if (!$global:NSXSSHConection.Connected) {
+      Write-Host "SSH Credentials Failed for NSX Manager." -ForegroundColor Red
+      fn_PressAnyKey  
+    } 
+  } while (!$global:NSXSSHConection.Connected)
+  $SSHCommand = 'ls'
+  Write-Host "NSX-T Manager SSH Test Successful" -ForegroundColor Green
+  Write-Host "SSH Session State:" $global:NSXSSHConection.Connected
+  fn_PressAnyKey
+  Clear-Host
+  Write-Host "Enter the " -ForegroundColor Green -NoNewline
+  Write-Host "ADMIN" -ForegroundColor Yellow -NoNewline
+  Write-Host " Credentials for API Processes on $global:NSXmgr" -ForegroundColor Green
+  $global:NSXTAdminCreds = Get-Credential
+  $global:NSXTAdminUser= $NSXTAdminCreds.UserName.ToString()
+  $global:NSXTAdminPass = $NSXTAdminCreds.GetNetworkCredential().password
+ # Write-Host
+ fn_RequestNSXToken
+ Write-Host "Back from Requesting token..."
+ fn_PressAnyKey
+}
+
+Function fn_GetSddcCreds {
+  Clear-Host
+  $global:sddcEnv ="Y"
+  Write-Host "SDDC Manager Information:" -ForegroundColor Green 
+  Write-Host
+  Write-Host "Enter the IP Address or FQDN of the SDDC Manager: " -ForegroundColor Green -NoNewLine
+  $global:SDDCmgr = Read-Host
+  Write-Host
+  Write-Host "Testing ability to find $global:SDDCmgr..."
+  if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
+    Write-Host "Unable to find $global:SDDCmgr " -ForegroundColor Red
+    Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+    Write-host
+    fn_PressAnyKey
+    fn_GetSddcCreds
+  } 
+  Write-Host "Connectivity to $global:SDDCmgr verified." -ForegroundColor Green
+  Write-Host
+  Write-Host "!! " -ForegroundColor Red -NoNewLine 
+  Write-Host "This process requires SSH ROOT access to the SDDC Manager " -ForegroundColor Green -NoNewLine
+  Write-Host "!!" -ForegroundColor Red
+  Write-Host
+  Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the SDDC Manager and verify " -ForegroundColor Green -NoNewLine
+  Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+  Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+  Write-Host "'yes'"-ForegroundColor Yellow
+  Write-Host
+  Write-Host
+  Write-Host "Enter the root Credentials for $global:SDDCmgr" -ForegroundColor Green
+  $global:sddcCreds = Get-Credential
+  $global:SDDCuser= $sddcCreds.UserName.ToString()
+  $global:SDDCpass = $sddcCreds.GetNetworkCredential().password
+  Write-Host
+  Write-Host "Verifying SSH to SDDC Manager $global:SDDCmgr :"
+  $global:SddCSSHSession = New-SSHSession -ComputerName $global:SDDCmgr -Credential $global:sddcCreds -AcceptKey:$true -ErrorAction ignore
+  if (!$global:SddCSSHSession.Connected) {
+    Write-Host "SSH Credentials Failed." -ForegroundColor Red
+    fn_PressAnyKey
+    fn_GetSddcCreds
+  }
+  $SSHCommand = 'shell; uptime -s'
+  $result = (Invoke-SSHCommand -SSHSession $global:SddCSSHSession -Command $SSHCommand).Output
+  Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
+  fn_PressAnyKey
+  Clear-Host
+  Write-Host "Info need for API YAML config file:" -ForegroundColor Green
+  Write-Host
+  Write-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
+  $global:NTPServer = Read-Host
+  Write-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
+  $global:SFTPServer = Read-Host
+  Write-Host "Requesting SDDC API Token"
+  fn_RequestSDDCToken
+  Write-Host "SDDC API Token and YAML file created."
+  fn_PressAnyKey
+}
+
 Function fn_GetvCenterCreds {
-  if (!$defaultVIServer) {
-      Clear-Host
-      Write-Host "Info need for YAML config file:" -ForegroundColor Green
-      Write-Host
-      Write-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
-      $global:NTPServer = Read-Host
-      Write-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
-      $global:SFTPServer = Read-Host
-      Write-Host
-      Write-Host "vCenter Information:" -ForegroundColor Green
-      Write-Host
-      Write-Host "Enter the FQDN of the vCenter Server: " -ForegroundColor Green -NoNewline
-      $vServer = Read-Host
-      Write-Host "Testing ability to find $vServer..."
-      Write-Host
+  Clear-Host
+  if ($global:defaultVIServer) {
+    Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
+    Write-Host $global:defaultVIServer -ForegroundColor Yellow 
+    Write-Host
+    Write-Host "Change vCenter (Y/N)?" -ForegroundColor Green -NoNewline
+    $ChangevCenter = Read-Host
+    if ($ChangevCenter -eq 'Y') {
+      Disconnect-VIServer -Server $global:defaultVIServer
+    }
+  }
+
+  if (!$global:DefaultVIServer) {
+    Clear-Host
+    Write-Host "vCenter Information:" -ForegroundColor Green
+    Write-Host
+    Write-Host "Enter the FQDN of the vCenter Server: " -ForegroundColor Green -NoNewline
+    $vServer = Read-Host
+    Write-Host "Testing ability to find $vServer..."
+    Write-Host
     if (!(Test-Connection -ComputerName $vServer -Quiet -Count 2)) {
       Write-Host "Unable to find $vServer" -ForegroundColor Red
       Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
       Write-host
       fn_PressAnyKey
       fn_GetvCenterCreds
-      } 
-
-    Write-Host "Connectivity to $defaultVIServer verified." -ForegroundColor Green
+    } 
+    Write-Host "Connectivity to $vServer verified." -ForegroundColor Green
     Write-Host
     Write-Host "Enter vCenter SSO Admin Credentials (administrator@vsphere.local): " -ForegroundColor Green -NoNewline
     $global:VCcreds = Get-Credential
     Connect-VIserver -Server $vServer -Credential $global:VCcreds
     $global:VCuser= $global:VCcreds.UserName.ToString()
     $global:VCpass = $global:VCcreds.GetNetworkCredential().password
-    if (!$defaultVIServer) {
-    Clear-Host
-    Write-Host "Invalid Login" -ForegroundColor red | fn_PressAnyKey | fn_GetvCenterCreds
-    }
-    Write-Host "vCenter Credentials Verified." -ForegroundColor Green
-    $allVIServers=$global:DefaultVIServers
-    fn_PressAnyKey
-    fn_RequestSDDCToken
+
+  # Set Inspec ENV Vars
+    $env:VISERVER=$global:defaultVIServer
+    $env:VISERVER_USERNAME=$global:VCuser
+    $env:VISERVER_PASSWORD=$global:VCpass
+    $env:NO_COLOR=$true
+    Connect-SsoAdminServer -server $env:VISERVER -user $env:VISERVER_USERNAME -password $env:VISERVER_PASSWORD -SkipCertificateCheck
   }
+# Re-Do Bad Login
+  if (!$defaultVIServer) {
+  Clear-Host
+  Write-Host "Invalid Login" -ForegroundColor red | fn_PressAnyKey | fn_GetvCenterCreds
+  }
+
+# Confirm Credentials
+  Write-Host "vCenter Credentials Verified." -ForegroundColor Green
+
+# Get vCenter Version
+  $global:vCVersion = $global:DefaultVIServer.Version
+  Write-Host "vCenter Vesion: "$global:vCVersion
+
+# Get vCenter API Token
+  $command = "curl -s -k -X POST -H 'Accept: application/json' --basic -u "+$global:VCuser+":"+$global:VCpass+" https://$global:defaultVIServer/rest/com/vmware/cis/session"
+  $global:vCAPIToken = Invoke-Expression $command
+  $global:vCAPIToken = $global:vCAPIToken.Remove(0,9) -replace ".{1}$"
+  $global:vCAPIToken = $global:vCAPIToken -replace '[""]','' 
+
+# Get and set SSH Service on vCenter
+  if ($global:vCVersion -lt '8') {
+    $apipath = "api/appliance/access/ssh"
+  }
+  if ($global:vCVersion -lt '7.0.2') {
+    $apipath = "rest/appliance/access/ssh"
+  }
+  $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:defaultVIServer/$apipath"
+  $vCSSH= Invoke-Expression $command
+  Write-Host "vCenter SSH Status: "$vCSSH -ForegroundColor Green
+  if (!$vCSSH) {
+    $command = "curl -k -s -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:defaultVIServer/api/appliance/access/ssh"
+    Write-Host "Enabeling SSH on vCenter "$global:DefaultVIServer -ForegroundColor Green
+    Invoke-Expression $command
+    $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:defaultVIServer/api/appliance/access/ssh"
+    $vCSSH= Invoke-Expression $command    
+  }
+
+  DO {
+    Clear-Host
+    Write-Host "vCenter SSH for "$defaultVIServer" is "$vCSSH
+    Write-Host "vC SSH Connection: "$global:vCSSSHConnection.Connected
+
+# Get vCenter SSH Creds for root
+    Write-Host "Enter vCenter SSH Credentials (root): " -ForegroundColor Green
+    $global:VCSSHcreds = Get-Credential
+    $global:VCSSHuser= $global:VCSSHCreds.UserName.ToString()
+    $global:VCSSHpass = $global:VCSSHCreds.GetNetworkCredential().password
+    if ($global:sddcEnv -eq "Y") {fn_RequestSDDCToken}
+
+# Enable SHELL for Root
+    Write-Host "Enabeling Shell for root"
+    if ($global:vCVersion -eq "7") {
+    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:defaultVIServer/api/appliance/access/shell"
+    }
+    if ($global:vCVersion -eq "8") {
+    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""config"":{""enabled"":true,""timeout"":10}}' https://$global:defaultVIServer/rest/appliance/access/shell"
+    }
+    # Write-Host "With Command: "$command
+    Invoke-Expression $command
+    Write-Host
+
+# Test vCenter SSH
+    Write-Host "Testing SSH connection to "$global:defaultVIServer
+    $global:vCSSSHConnection = New-SSHSession -ComputerName $global:defaultVIServer -Credential $global:VCSSHCreds -AcceptKey:$true -ErrorAction ignore
+    if (!$global:vCSSSHConnection.Connected) {
+      Write-Host "SSH Credentials Failed for vCenter." -ForegroundColor Red
+      fn_PressAnyKey  
+      fn_GetvCenterCreds
+    } 
+  } while (!$global:vCSSSHConnection.Connected)
+  Write-Host "vCenter SSH bin/bash Test Successful " $result -ForegroundColor Green
+  Write-Host
+  fn_PressAnyKey
 }
 
 Function fn_GetESXCreds {
@@ -4134,7 +4136,12 @@ Function fn_GetESXCreds {
   Write-Host "!!" -ForegroundColor Red
   Write-Host
   Write-Host "Enter the root Credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
-  $global:SSHCreds = Get-Credential
+  $global:ESXSSHCreds = Get-Credential
+  $global:ESXSSHuser= $global:ESXSSHCreds.UserName.ToString()
+  $global:ESXSSHpass = $global:ESXSSHCreds.GetNetworkCredential().password
+  $env:VISERVER="10.0.0.6"
+  $env:VISERVER_USERNAME="adminsitrator@vsphere.local"
+  $env:VISERVER_PASSWORD="VMware123!"
   Write-Host
   Write-Host "Verifying SSH Connectivity to Hosts..." -ForegroundColor Yellow
   Write-Host
@@ -4149,7 +4156,7 @@ Function fn_GetESXCreds {
           fn_SSH_ON
         }
 
-      $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:SSHCreds -AcceptKey:$true -ErrorAction Stop
+      $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true -ErrorAction Stop
       $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
 
       if ($result -eq "x") {
@@ -4165,6 +4172,11 @@ Function fn_GetESXCreds {
 }
 
 Function fn_Collector {
+  Clear-Host
+  fn_GetvCenterCreds
+  Clear-Host
+  fn_GetESXCreds
+  Clear-Host
   $host.UI.RawUI.BackgroundColor = "Black"
   Clear-Host
   Write-Host "Is this a VCF Deployment (Y/N)? " -NoNewLine -ForegroundColor Yellow
@@ -4174,10 +4186,6 @@ Function fn_Collector {
   Write-Host "Include NSX-T (Y/N)? " -NoNewLine -ForegroundColor Yellow
   $Global:nsxEnv = Read-Host
   if ($Global:nsxEnv -eq 'Y') {fn_getNSXCreds}
-  Clear-Host
-  fn_GetvCenterCreds
-  Clear-Host
-  fn_GetESXCreds
   Clear-Host
   fn_MainMenu
 }
@@ -4211,8 +4219,8 @@ Function fn_MainMenu {
     Write-Host "[L] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Enable Lockdown Mode  " -ForegroundColor Green
     Write-Host
-    Write-Host "[V]" -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan VCF Components" -ForegroundColor Green
+    Write-Host "[S] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "DISA STIG Report" -ForegroundColor Green
     Write-Host
     Write-Host "[Q] " -ForegroundColor Red -NoNewLine
     Write-Host "QUIT  " -ForegroundColor Red
@@ -4275,9 +4283,9 @@ Function fn_MainMenu {
             fn_MainMenu
         }
 		
-        V {
+        S {
           Clear-Host
-          fn_VCFMenu
+          fn_STIGMenu
           fn_PressAnyKey
           fn_MainMenu
         }
@@ -4289,20 +4297,28 @@ Function fn_MainMenu {
 
 }
 
-Function fn_VCFMenu {
+Function fn_STIGMenu {
     $host.UI.RawUI.BackgroundColor = "Black"
     Clear-Host
-    Write-Host "VCF MENU" -ForegroundColor Green
+    Write-Host "DISA STIG Report MENU" -ForegroundColor Green
     Write-Host
-    Write-Host "Currently Connected to SDDC Manager: " -ForegroundColor Green -NoNewLine
-    Write-Host $global:sddcmgr -ForegroundColor Yellow
-    Write-Host
+    Write-Host "Currently Connected to vCenter: " -ForegroundColor Green -NoNewLine
+    Write-Host $global:DefaultVIServer -ForegroundColor Yellow
     Write-Host
     Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan SDDC Manager $global:sddcmgr" -ForegroundColor Green
+    Write-Host "Scan SDDC Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan NSX-T Manager $global:NSXTmgr" -ForegroundColor Green
+    Write-Host "Scan vCenter" -ForegroundColor Green
+    Write-Host
+    Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan ESX Hosts" -ForegroundColor Green
+    Write-Host
+    Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan NSX Manager" -ForegroundColor Green
+    Write-Host
+    Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
     Write-Host
     Write-Host "[Q] " -ForegroundColor Red -NoNewLine
@@ -4316,14 +4332,33 @@ Function fn_VCFMenu {
           Clear-Host
           fn_vcfscanner
           fn_PressAnyKey
-          fn_VCFMenu
+          fn_STIGMenu
         }
 
       2 {
         Clear-Host
+        fn_vCscanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }  
+
+      3 {
+        Clear-Host
+        fn_ESXscanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }  
+
+      4 {
+        Clear-Host
         fn_nsxscanner
         fn_PressAnyKey
-        fn_VCFMenu
+        fn_STIGMenu
+      }  
+
+      X {
+        Clear-Host
+        fn_MainMenu
       }  
 
         Q {
@@ -4554,7 +4589,7 @@ Function fn_RunScan {
 
 Function fn_Build_ESX_CSV {
   $date = (Get-date).tostring("dd-MM-yyyy-hh-mm")
-  $global:csvFile = "$($defaultVIServer) - $($date) - ESX Scan.csv"
+  $global:csvFile = "./results/$($defaultVIServer) - $($date) - ESX Scan.csv"
 
   # Build first Column of report
 
@@ -4572,7 +4607,7 @@ Function fn_Build_ESX_CSV {
 
 Function fn_Build_VM_CSV {
   $date = (Get-date).tostring("dd-MM-yyyy-hh-mm")
-  $global:csvFile = "$($defaultVIServer) - $($date) - VM Scan.csv"
+  $global:csvFile = "./results/$($defaultVIServer) - $($date) - VM Scan.csv"
 
   # Build first Column of report
 
@@ -4587,7 +4622,7 @@ Function fn_Build_VM_CSV {
 
 Function fn_Build_vCenter_CSV {
   $date = (Get-date).tostring("dd-MM-yyyy-hh-mm")
-  $global:csvFile = "$($defaultVIServer) - $($date) - vC.csv"
+  $global:csvFile = "./results/$($defaultVIServer) - $($date) - vC.csv"
 
   $FirstColumn = @('VMware ID', 'Priority', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
 
@@ -4596,7 +4631,7 @@ Function fn_Build_vCenter_CSV {
   $FirstColumn | ForEach-Object {@{N=$_}} | Export-Csv $global:csvFile -NoTypeInformation -Force
 }
 
-Clear-Host-
+Clear-Host
 $host.UI.RawUI.ForegroundColor = "White"
 $host.UI.RawUI.BackgroundColor = "Black"
 fn_Welcome
