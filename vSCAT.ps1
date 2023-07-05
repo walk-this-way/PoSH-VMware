@@ -90,11 +90,7 @@ Function fn_Lockdown_on {
 
 Function fn_vcfscanner { 
   Write-Host "Running scan of VCF Environment:"
-  Write-Host "Creds:"
-  Write-Host $env:VISERVER
-  Write-Host $env:VISERVER_USERNAME
-  Write-Host $env:VISERVER_PASSWORD
-  $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
+  $jsonOutput = "./results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
   $command = "inspec exec $profilePath/. -t ssh://'$global:SDDCuser'@'$global:SDDCmgr' --password '$global:SDDCpass' --input-file='$profilePath/inputs-vcf-sddc-mgr-4x.yml' --show-progress --reporter=cli json:.$jsonOutput"
@@ -108,7 +104,7 @@ Function fn_ESXscanner {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-  $jsonOutput = "./results/ESX_Scan_"+$global:date+".json"
+  $jsonOutput = "./results/ESX_Scan_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -118,7 +114,7 @@ Function fn_ESXscanner {
 
 Function fn_nsxscanner { 
   Write-Host "Running scan of NSX-T Environment:"
-  $jsonOutput = "./results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date+".json"
+  $jsonOutput = "./results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = "/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master"
   $command ="inspec exec $profilePath/. -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file="+$profilePath+"/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:$jsonOutput"
@@ -3907,7 +3903,7 @@ Function fn_getNSXCreds {
     $ChangeNSXMgr = Read-Host
     if ($ChangeNSXMgr -eq 'Y') {
       $global:NSXmgr = ''
-      fn_GetESXCreds
+      fn_GetNSXCreds
     }
   }
 
@@ -4139,9 +4135,9 @@ Function fn_GetESXCreds {
   $global:ESXSSHCreds = Get-Credential
   $global:ESXSSHuser= $global:ESXSSHCreds.UserName.ToString()
   $global:ESXSSHpass = $global:ESXSSHCreds.GetNetworkCredential().password
-  $env:VISERVER="10.0.0.6"
-  $env:VISERVER_USERNAME="adminsitrator@vsphere.local"
-  $env:VISERVER_PASSWORD="VMware123!"
+  $env:VISERVER=$global:DefaultVIServer
+  $env:VISERVER_USERNAME=$global:VCuser
+  $env:VISERVER_PASSWORD=$global:VCpass
   Write-Host
   Write-Host "Verifying SSH Connectivity to Hosts..." -ForegroundColor Yellow
   Write-Host
