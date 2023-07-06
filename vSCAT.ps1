@@ -10,11 +10,12 @@ $global:allVM = ""
 $global:UnnecessaryHardware = "VirtualUSBController|VirtualUSBXHCIController|VirtualParallelPort|VirtualFloppy|VirtualSerialPort|VirtualHdAudioCard|VirtualAHCIController|VirtualEnsoniq1371|VirtualCdrom"
 $global:SDDCmgr = ""
 $global:sddcCreds = ""
-$global:defaultVIServer = ""
+$global:defaultVIServer = "Not Connected"
 $global:DefaultVIServers = ""
 $global:VCcreds = ""
 $global:NSXmgr = ""
 $global:ESXSSHCreds = ""
+
 
 Function fn_GetAppIP {
   If (Test-Path -Path /etc/systemd/network) {
@@ -88,7 +89,7 @@ Function fn_Lockdown_on {
 ####################      STIG SCAN FUNCTINS      #######################
 #########################################################################
 
-Function fn_vcfscanner { 
+Function fn_sddcscanner { 
   Write-Host "Running scan of VCF Environment:"
   $jsonOutput = "./results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
@@ -113,7 +114,7 @@ Function fn_ESXscanner {
 }
 
 Function fn_nsxscanner { 
-  Write-Host "Running scan of NSX-T Environment:"
+  Write-Host "Running scan of NSX Environment:"
   $jsonOutput = "./results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = "/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master"
@@ -2845,7 +2846,7 @@ Function NIST800-53-VI-VC-CFG-00065{
 
     fn_Print_VM_Control_Info
 
-    if($global:allVM )
+    if($global:allVM)
     {
         foreach ($VM in $global:allVM ) {   
         $result = Invoke-Expression $global:command.tostring()
@@ -3879,6 +3880,24 @@ Function fn_RequestNSXToken {
 
 Function fn_getNSXCreds {
   Clear-Host
+# Determine if NSX Credentials are Valid
+  if ($global:NSXRootCreds -ne '') { 
+    Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+    Write-Host $global:NSXRootUser -ForegroundColor Yellow 
+    $passlength = ($global:NSXRootPass.Length)-4
+    $obs_RootPass = $global:NSXRootPass.substring(0,2) 
+    For ($i = 0; $i -lt $passlength; $i++) {
+          $obs_RootPass += "*"
+        }
+    $obs_RootPass = $obs_RootPass.Substring($passlength,-2)
+    Write-Host "With password: "$obs_RootPass ForegroundColor Yellow -NoNewline
+    Write-Host
+    $ChangeNSXCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+    if ($ChangeNSXCreds -eq 'N') {
+      $global:NSXRootCreds = ''
+      fn_getNSXCreds
+    }
+  }
   if ($global:NSXmgr -eq '') {
     Write-Host "NSX-T Manager Information:" -ForegroundColor Green 
     Write-Host
@@ -3899,8 +3918,8 @@ Function fn_getNSXCreds {
     Write-Host "You are currently connected to NSX Manager" -ForegroundColor Green -NoNewline
     Write-Host $global:NSXmgr -ForegroundColor Yellow
     Write-Host
-    Write-Host "Change NSX Manager (Y/N)?" -NoNewline
-    $ChangeNSXMgr = Read-Host
+    $ChangeNSXMgr = Read-Host "Change NSX Manager (Y/N)?" -NoNewline
+    
     if ($ChangeNSXMgr -eq 'Y') {
       $global:NSXmgr = ''
       fn_GetNSXCreds
@@ -3951,6 +3970,13 @@ Function fn_getNSXCreds {
 
 Function fn_GetSddcCreds {
   Clear-Host
+# Determine if vCenter Credentials are Defined
+  if ($global:defaultVIServer -eq 'Not Connected') {
+    Write-Host "No vCenter SSO Credentials Identified." -ForegroundColor Red
+    Write-Host "You must connect to the linked vCenter Server to continue." -ForegroundColor Yellow
+    fn_PressAnyKey
+    fn_GetvCenterCreds
+  }
 # Determine if SDDC Connection Exist or Switch Manager
   if ($global:SDDCmgr -ne "Not Connected") {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
@@ -3964,72 +3990,68 @@ Function fn_GetSddcCreds {
   }
 # If Connected offer  
   if ($global:SDDCmgr -eq "Not Connected") {
-  Write-Host "SDDC Manager Information:" -ForegroundColor Green 
-  Write-Host
-  $global:SDDCmgr = Read-Host "Enter the IP Address or FQDN of the SDDC Manager " -ForegroundColor Green -NoNewLine
-  Write-Host
-  Write-Host "Testing ability to find $global:SDDCmgr..."
-  if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
-    Write-Host "Unable to find $global:SDDCmgr " -ForegroundColor Red
-    Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
-    Write-host
-    fn_PressAnyKey
-    fn_GetSddcCreds
-  } 
-  Write-Host "Connectivity to $global:SDDCmgr verified." -ForegroundColor Green
-  Write-Host
-  Write-Host "!! " -ForegroundColor Red -NoNewLine 
-  Write-Host "This process requires SSH ROOT access to the SDDC Manager " -ForegroundColor Green -NoNewLine
-  Write-Host "!!" -ForegroundColor Red
-  Write-Host
-  Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the SDDC Manager and verify " -ForegroundColor Green -NoNewLine
-  Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
-  Write-Host " should be set to " -ForegroundColor Green -NoNewLine
-  Write-Host "'yes'"-ForegroundColor Yellow
-  Write-Host
-  Write-Host
-  Write-Host "Enter the root Credentials for $global:SDDCmgr" -ForegroundColor Green
-  $global:sddcCreds = Get-Credential
-  $global:SDDCuser= $sddcCreds.UserName.ToString()
-  $global:SDDCpass = $sddcCreds.GetNetworkCredential().password
-  Write-Host
-  Write-Host "Verifying SSH to SDDC Manager $global:SDDCmgr :"
-  $global:SddCSSHSession = New-SSHSession -ComputerName $global:SDDCmgr -Credential $global:sddcCreds -AcceptKey:$true -ErrorAction ignore
-  if (!$global:SddCSSHSession.Connected) {
-    Write-Host "SSH Credentials Failed." -ForegroundColor Red
-    fn_PressAnyKey
-    fn_GetSddcCreds
-  }
-  $SSHCommand = 'shell; uptime -s'
-  $result = (Invoke-SSHCommand -SSHSession $global:SddCSSHSession -Command $SSHCommand).Output
-  Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
-  Write-Host "Info need for API YAML config file:" -ForegroundColor Green
-  Write-Host
-  $global:NTPServer = Read-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
-  $global:SFTPServer = Read-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
-  Write-Host "Requesting SDDC API Token"
-
-# Determine if vCenter Credentials are Defined
-  if ($global:defaultVIServer -eq 'Not Connected') {
-    Write-Host "No vCenter SSO Credentials Identified." -ForegroundColor Red
-    fn_PressAnyKey
-    fn_GetvCenterCreds
-  }
+    Write-Host "SDDC Manager Information:" -ForegroundColor Green 
+    Write-Host
+    $global:SDDCmgr = Read-Host "Enter the IP Address or FQDN of the SDDC Manager " -ForegroundColor Green -NoNewLine
+    Write-Host
+    Write-Host "Testing ability to find $global:SDDCmgr..."
+    if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
+      Write-Host "Unable to find $global:SDDCmgr " -ForegroundColor Red
+      Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+      Write-host
+      fn_PressAnyKey
+      fn_GetSddcCreds
+    } 
+    Write-Host "Connectivity to $global:SDDCmgr verified." -ForegroundColor Green
+    Write-Host
+    Write-Host "!! " -ForegroundColor Red -NoNewLine 
+    Write-Host "This process requires SSH ROOT access to the SDDC Manager " -ForegroundColor Green -NoNewLine
+    Write-Host "!!" -ForegroundColor Red
+    Write-Host
+    Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the SDDC Manager and verify " -ForegroundColor Green -NoNewLine
+    Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+    Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+    Write-Host "'yes'"-ForegroundColor Yellow
+    Write-Host
+    Write-Host
+    Write-Host "Enter the root Credentials for $global:SDDCmgr" -ForegroundColor Green
+    $global:sddcCreds = Get-Credential
+    $global:SDDCuser= $sddcCreds.UserName.ToString()
+    $global:SDDCpass = $sddcCreds.GetNetworkCredential().password
+    Write-Host
+    Write-Host "Verifying SSH to SDDC Manager $global:SDDCmgr :"
+    $global:SddCSSHSession = New-SSHSession -ComputerName $global:SDDCmgr -Credential $global:sddcCreds -AcceptKey:$true -ErrorAction ignore
+    if (!$global:SddCSSHSession.Connected) {
+      Write-Host "SSH Credentials Failed." -ForegroundColor Red
+      fn_PressAnyKey
+      fn_GetSddcCreds
+    }
+    $SSHCommand = 'shell; uptime -s'
+    $result = (Invoke-SSHCommand -SSHSession $global:SddCSSHSession -Command $SSHCommand).Output
+    Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
+    Write-Host "Info need for API YAML config file:" -ForegroundColor Green
+    Write-Host
+    $global:NTPServer = Read-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
+    $global:SFTPServer = Read-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
+    Write-Host "Requesting SDDC API Token"
 
 # Generate API Tokens for SDDC Manager
-  fn_RequestSDDCToken
-  Write-Host "SDDC API Token and YAML file created."
-  fn_PressAnyKey
+    fn_RequestSDDCToken
+    Write-Host "SDDC API Token and YAML file created."
+    fn_PressAnyKey
+  }
 }
 
 Function fn_GetvCenterCreds {
   Clear-Host
+  Write-Host "Getting vCenter Creds for "$global:defaultVIServer
+  fn_PressAnyKey
 # If connected to a vCenter give option to switch. 
   if ($global:defaultVIServer -ne "Not Connected") {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
     Write-Host $global:defaultVIServer -ForegroundColor Yellow 
     Write-Host
-    $ChangevCenter = Read-Host "Stay connected to this vCenter (Y/N)?" -ForegroundColor Green -NoNewline
+    $ChangevCenter = Read-Host "Stay connected to this vCenter (Y/N)?"
     if ($ChangevCenter -eq 'N') {
       Disconnect-VIServer -Server $global:defaultVIServer
       $global:defaultVIServer = "Not Connected"
@@ -4041,7 +4063,7 @@ Function fn_GetvCenterCreds {
     Clear-Host
     Write-Host "vCenter Information:" -ForegroundColor Green
     Write-Host
-    $vServer = Read-Host "Enter the FQDN of the vCenter Server " -ForegroundColor Green -NoNewline
+    $vServer = Read-Host "Enter the FQDN of the vCenter Server " 
     Write-Host "Testing ability to find $vServer..."
     Write-Host
     if (!(Test-Connection -ComputerName $vServer -Quiet -Count 2)) {
@@ -4058,6 +4080,7 @@ Function fn_GetvCenterCreds {
     Connect-VIserver -Server $vServer -Credential $global:VCcreds
     $global:VCuser= $global:VCcreds.UserName.ToString()
     $global:VCpass = $global:VCcreds.GetNetworkCredential().password
+    if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
 
   # Set Inspec ENV Vars
     $env:VISERVER=$global:defaultVIServer
@@ -4142,66 +4165,62 @@ Function fn_GetvCenterCreds {
 
 Function fn_GetESXCreds {
   Clear-Host
-  Write-Host "ESX Host Information:" -ForegroundColor Green
-  Write-Host
-  Write-Host "This process requires SSH ROOT access to the ESX Hosts " -ForegroundColor Green -NoNewLine
-  Write-Host "!!" -ForegroundColor Red
-  Write-Host
-  Write-Host "Enter the root Credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
-  $global:ESXSSHCreds = Get-Credential
-  $global:ESXSSHuser= $global:ESXSSHCreds.UserName.ToString()
-  $global:ESXSSHpass = $global:ESXSSHCreds.GetNetworkCredential().password
-  $env:VISERVER=$global:DefaultVIServer
-  $env:VISERVER_USERNAME=$global:VCuser
-  $env:VISERVER_PASSWORD=$global:VCpass
-  Write-Host
-  Write-Host "Verifying SSH Connectivity to Hosts..." -ForegroundColor Yellow
-  Write-Host
-  $allHosts = Get-VMHost | Sort-Object Name
-    foreach ($VMHost in $allHosts) {
-        $result = "x"
-        $command = 'pwd'
-        $color = "Green"
-        if(!(fn_SSH_Check))
-        {
-          $sshon = 0
-          fn_SSH_ON
+# Determine if ESX Credentials are Valid
+  if ($global:ESXSSHCreds -ne '') { 
+    Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+    Write-Host $global:ESXSSHuser -ForegroundColor Yellow 
+    $passlength = ($global:ESXSSHpass.Length)-4
+    $obs_SSHPass = $global:ESXSSHpass.substring(0,2) 
+    For ($i = 0; $i -lt $passlength; $i++) {
+          $obs_SSHPass += "*"
         }
-
-      $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true -ErrorAction Stop
-      $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
-
-      if ($result -eq "x") {
-        Write-Host $VMHost "- FAIL" -ForegroundColor Red
-      } else {
-        Write-Host $VMHost "- $result Passed" -ForegroundColor Green
+    $obs_SSHPass = $obs_SSHPass.Substring($passlength,-2)
+    Write-Host "With password: "$obs_SSHPass ForegroundColor Yellow -NoNewline
+    Write-Host
+    $ChangeESXCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+    if ($ChangeESXCreds -eq 'N') {
+      $global:ESXSSHCreds = ''
+      fn_GetESXCreds
+    }
+  if ($global:ESXSSHCreds -eq '') {
+    Write-Host "ESX Host Information:" -ForegroundColor Green
+    Write-Host
+    Write-Host "This process requires SSH ROOT access to the ESX Hosts " -ForegroundColor Green -NoNewLine
+    Write-Host "!!" -ForegroundColor Red
+    Write-Host
+    Write-Host "Enter the root Credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
+    $global:ESXSSHCreds = Get-Credential
+    $global:ESXSSHuser= $global:ESXSSHCreds.UserName.ToString()
+    $global:ESXSSHpass = $global:ESXSSHCreds.GetNetworkCredential().password
+    $env:VISERVER=$global:DefaultVIServer
+    $env:VISERVER_USERNAME=$global:VCuser
+    $env:VISERVER_PASSWORD=$global:VCpass
+    Write-Host
+    Write-Host "Verifying SSH Connectivity to Hosts..." -ForegroundColor Yellow
+    Write-Host
+    $allHosts = Get-VMHost | Sort-Object Name
+      foreach ($VMHost in $allHosts) {
+          $result = "x"
+          $command = 'pwd'
+          $color = "Green"
+          if(!(fn_SSH_Check))
+          {
+            $sshon = 0
+            fn_SSH_ON
+          }
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true -ErrorAction ignore
+        $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
+        if ($result -eq "x") {
+          Write-Host $VMHost "- FAIL" -ForegroundColor Red
+        } else {
+          Write-Host $VMHost "- $result Passed" -ForegroundColor Green
+        }
+        if ($sshon -eq 0) {fn_SSH_OFF}
       }
-
-
-      if ($sshon -eq 0) {fn_SSH_OFF}
+    }   
   }
   fn_PressAnyKey
 }
-
-Function fn_Collector {
-  Clear-Host
-  fn_GetvCenterCreds
-  Clear-Host
-  fn_GetESXCreds
-  Clear-Host
-  $host.UI.RawUI.BackgroundColor = "Black"
-  Clear-Host
-  Write-Host "Is this a VCF Deployment (Y/N)? " -NoNewLine -ForegroundColor Yellow
-  $Global:sddcEnv = Read-Host
-  if ($Global:sddcEnv -eq 'Y') {fn_GetSddcCreds}
-  Clear-Host
-  Write-Host "Include NSX-T (Y/N)? " -NoNewLine -ForegroundColor Yellow
-  $Global:nsxEnv = Read-Host
-  if ($Global:nsxEnv -eq 'Y') {fn_getNSXCreds}
-  Clear-Host
-  fn_MainMenu
-}
-
 Function fn_MainMenu {
     $host.UI.RawUI.BackgroundColor = "Black"
     Clear-Host
@@ -4244,7 +4263,7 @@ Function fn_MainMenu {
 
       1 {
           Clear-Host
-          if ($global:defaultVIServer -eq "Not Connectied") {fn_GetvCenterCreds}
+          fn_GetvCenterCreds
           fn_Build_vCenter_CSV
           fn_Load_vCenter_Controls
           fn_RunScan
@@ -4254,8 +4273,8 @@ Function fn_MainMenu {
   
       2 {
         Clear-Host
-        if ($global:defaultVIServer -eq "Not Connectied") {fn_GetvCenterCreds}
-
+        ifn_GetvCenterCreds
+        fn_GetESXCreds
         fn_Build_ESX_CSV
         fn_Load_ESX_Controls
         fn_RunScan
@@ -4264,6 +4283,7 @@ Function fn_MainMenu {
 
       3 {
         Clear-Host
+        if ($global:defaultVIServer -eq "Not Connectied") {fn_GetvCenterCreds}
         fn_Build_VM_CSV
         fn_Load_VM_Controls
         fn_RunScan
@@ -4347,14 +4367,15 @@ Function fn_STIGMenu {
       1 {
           Clear-Host
           if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-
-          fn_vcfscanner
+          fn_GetSddcCreds
+          fn_sddcscanner
           fn_PressAnyKey
           fn_STIGMenu
         }
 
       2 {
         Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_vCscanner
         fn_PressAnyKey
         fn_STIGMenu
@@ -4362,6 +4383,7 @@ Function fn_STIGMenu {
 
       3 {
         Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_ESXscanner
         fn_PressAnyKey
         fn_STIGMenu
@@ -4631,7 +4653,7 @@ Function fn_Build_VM_CSV {
 
   $FirstColumn = @('VMware ID', 'Priority', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
 
-  $global:allVM = Get-VM | Sort-Object
+  $global:allVM = Get-VM | Sort-Object | Where-Object {$_.Name -notlike "vCLS-*"}
 
   $FirstColumn += $global:allVM
 
