@@ -47,6 +47,8 @@ vCenter:
   - SSO Administrtor Account Credentials (administrator@vsphere.local)
   - root account credentials for SSH operations.
   - root BASH shell configured (https://kb.vmware.com/s/article/2100508)
+  - Enable root login over SSH 
+  (https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/v2v_guide/preparation_before_the_p2v_migration-enable_root_login_over_ssh)
 	
 vSphere (ESX):
 	- root credentials for SSH operations
@@ -4106,7 +4108,7 @@ Function fn_GetvCenterCreds {
   $global:vCAPIToken = $global:vCAPIToken -replace '[""]','' 
 
 # Get and set SSH Service on vCenter
-  if ($global:vCVersion -lt '8') {
+  <#if ($global:vCVersion -lt '8') {
     $apipath = "api/appliance/access/ssh"
   }
   if ($global:vCVersion -lt '7.0.2') {
@@ -4122,20 +4124,22 @@ Function fn_GetvCenterCreds {
     $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:defaultVIServer/api/appliance/access/ssh"
     $vCSSH= Invoke-Expression $command    
   }
+#>
 
   DO {
   #  Clear-Host
-    Write-Host "vCenter SSH for "$defaultVIServer" is "$vCSSH
-    Write-Host "vC SSH Connection: "$global:vCSSSHConnection.Connected
+  #  Write-Host "vCenter SSH for "$defaultVIServer" is "$vCSSH
+  #  Write-Host "vC SSH Connection: "$global:vCSSSHConnection.Connected
 
 # Get vCenter SSH Creds for root
+    Get-SSHTrustedHost | Remove-SSHTrustedHost #removes saved trusted keys
     Write-Host "Enter vCenter SSH Credentials (root): " -ForegroundColor Green
     $global:VCSSHcreds = Get-Credential
     $global:VCSSHuser= $global:VCSSHCreds.UserName.ToString()
     $global:VCSSHpass = $global:VCSSHCreds.GetNetworkCredential().password
 
 # Enable SHELL for Root
-    Write-Host "Enabeling Shell for root"
+ <#   Write-Host "Enabeling Shell for root"
     if ($global:vCVersion -eq "7") {
     $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:defaultVIServer/api/appliance/access/shell"
     }
@@ -4145,12 +4149,14 @@ Function fn_GetvCenterCreds {
     # Write-Host "With Command: "$command
     Invoke-Expression $command
     Write-Host
-
+ #>
 # Test vCenter SSH
     Write-Host "Testing SSH connection to "$global:defaultVIServer
     $global:vCSSSHConnection = New-SSHSession -ComputerName $global:defaultVIServer -Credential $global:VCSSHCreds -AcceptKey:$true -ErrorAction ignore
+    Write-Host "Session : " $global:vCSSSHConnection
     if (!$global:vCSSSHConnection.Connected) {
       Write-Host "SSH Credentials Failed for vCenter." -ForegroundColor Red
+      Write-Host "Configure SSH services on VC and try again" -ForegroundColor Red
       fn_PressAnyKey  
       fn_GetvCenterCreds
     } 
