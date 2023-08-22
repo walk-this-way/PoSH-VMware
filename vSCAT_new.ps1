@@ -89,7 +89,7 @@ Function fn_Lockdown_on {
 
 
 #########################################################################
-####################      STIG SCAN FUNCTINS      #######################
+####################      STIG SCAN FUNCTIONS      #######################
 #########################################################################
 
 Function fn_sddcscanner { 
@@ -3982,7 +3982,8 @@ Function fn_GetSddcCreds {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
     Write-Host $global:SDDCmgr -ForegroundColor Yellow 
     Write-Host
-    $ChangeSDDCmgr = Read-Host "Stay connected to this SDDC Manager (Y/N)?" -ForegroundColor Green -NoNewline
+    Write-Host "Stay connected to this SDDC Manager (Y/N)?" -ForegroundColor Green -NoNewline 
+    $ChangeSDDCmgr = Read-Host    
     if ($ChangeSDDCmgr -eq 'N') {
       $global:SDDCmgr = "Not Connected"
       fn_GetSddcCreds
@@ -3992,7 +3993,8 @@ Function fn_GetSddcCreds {
   if ($global:SDDCmgr -eq "Not Connected") {
     Write-Host "SDDC Manager Information:" -ForegroundColor Green 
     Write-Host
-    $global:SDDCmgr = Read-Host "Enter the IP Address or FQDN of the SDDC Manager " -ForegroundColor Green -NoNewLine
+    Write-Host "Enter the IP Address or FQDN of the SDDC Manager " -ForegroundColor Green -NoNewLine
+    $global:SDDCmgr = Read-Host 
     Write-Host
     Write-Host "Testing ability to find $global:SDDCmgr..."
     if (!(Test-Connection -ComputerName $global:SDDCmgr -Quiet -Count 2)) {
@@ -4031,8 +4033,10 @@ Function fn_GetSddcCreds {
     Write-Host "SDDC Manager SSH Test Successful" -ForegroundColor Green
     Write-Host "Info need for API YAML config file:" -ForegroundColor Green
     Write-Host
-    $global:NTPServer = Read-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
-    $global:SFTPServer = Read-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
+    Write-Host "Enter the FQDN or IP of the NTP Server: " -ForegroundColor Green -NoNewline
+    $global:NTPServer = Read-Host 
+    Write-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
+    $global:SFTPServer = Read-Host 
     Write-Host "Requesting SDDC API Token"
 
 # Generate API Tokens for SDDC Manager
