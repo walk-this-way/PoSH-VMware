@@ -13,7 +13,7 @@ $global:sddcCreds = ""
 $global:defaultVIServer = "Not Connected"
 $global:DefaultVIServers = ""
 $global:VCcreds = ""
-$global:NSXmgr = ""
+$global:NSXmgr = "Not Connected"
 $global:ESXSSHCreds = ""
 $global:ESXSSHuser = "blank"
 
@@ -94,7 +94,7 @@ Function fn_Lockdown_on {
 
 Function fn_sddcscanner { 
   Write-Host "Running scan of VCF Environment:"
-  $jsonOutput = "~/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date
+  $jsonOutput = "/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
   $command = "inspec exec $profilePath/. -t ssh://'$global:SDDCuser'@'$global:SDDCmgr' --password '$global:SDDCpass' --input-file='$profilePath/inputs-vcf-sddc-mgr-4x.yml' --show-progress --reporter=cli json:.$jsonOutput"
@@ -108,7 +108,7 @@ Function fn_ESXscanner {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-  $jsonOutput = "~/results/ESX_Scan_"+$global:date
+  $jsonOutput = "/resultss/ESX_Scan_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -118,7 +118,7 @@ Function fn_ESXscanner {
 
 Function fn_nsxscanner { 
   Write-Host "Running scan of NSX Environment:"
-  $jsonOutput = "~/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
+  $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = "/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master"
   $command ="inspec exec $profilePath/. -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file="+$profilePath+"/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:$jsonOutput"
@@ -128,7 +128,7 @@ Function fn_nsxscanner {
   
 Function fn_vCscanner { 
   Write-Host "Running vCenter Scan Environment:"
-  $jsonOutput = "~/results/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
+  $jsonOutput = "/resultss/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vcsa/inspec/vmware-vcsa-"+$global:vCVersion[0]+".0-stig-baseline"
   $command ="inspec exec $profilePath/. -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --show-progress --reporter=cli json:"+$jsonOutput
