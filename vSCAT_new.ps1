@@ -8,7 +8,7 @@ $global:date = (Get-date).tostring('dd-MM-yyyy-hh-mm')
 $UserDomain = ""
 $global:allVM = ""
 $global:UnnecessaryHardware = "VirtualUSBController|VirtualUSBXHCIController|VirtualParallelPort|VirtualFloppy|VirtualSerialPort|VirtualHdAudioCard|VirtualAHCIController|VirtualEnsoniq1371|VirtualCdrom"
-$global:SDDCmgr = ""
+$global:SDDCmgr = "Not Connected"
 $global:sddcCreds = ""
 $global:defaultVIServer = "Not Connected"
 $global:DefaultVIServers = ""
@@ -4090,7 +4090,7 @@ Function fn_GetvCenterCreds {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-    Connect-SsoAdminServer -server $env:VISERVER -user $env:VISERVER_USERNAME -password $env:VISERVER_PASSWORD -SkipCertificateCheck
+    #Connect-SsoAdminServer -server $env:VISERVER -user $env:VISERVER_USERNAME -password $env:VISERVER_PASSWORD -SkipCertificateCheck
   }
 # Re-Do Bad Login
   if (!$defaultVIServer) {
