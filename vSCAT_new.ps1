@@ -13,7 +13,7 @@ $global:sddcCreds = ""
 $global:defaultVIServer = "Not Connected"
 $global:DefaultVIServers = ""
 $global:VCcreds = ""
-$global:NSXmgr = "Not Connected"
+$global:NSXmgr = ""
 $global:ESXSSHCreds = ""
 $global:ESXSSHuser = "blank"
 
@@ -4399,6 +4399,7 @@ Function fn_STIGMenu {
 
       4 {
         Clear-Host
+        fn_getNSXCreds
         fn_nsxscanner
         fn_PressAnyKey
         fn_STIGMenu
