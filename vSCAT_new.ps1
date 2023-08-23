@@ -108,7 +108,7 @@ Function fn_ESXscanner {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-  $jsonOutput = "/results/ESX_Scan_"+$global:date
+  $jsonOutput = "~/results/ESX_Scan_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -117,18 +117,19 @@ Function fn_ESXscanner {
 }
 
 Function fn_nsxscanner { 
+  #if fails to find dfw profile, rm inspec.lock out of folder and rerun
   Write-Host "Running scan of NSX Environment:"
-  $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
+  $jsonOutput = "~/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master'
-  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:$jsonOutput"
+  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --reporter=cli json:$jsonOutput"
   Invoke-Expression $command
   Write-Host "NSX-T Scan Complete!"
 }
   
 Function fn_vCscanner { 
   Write-Host "Running vCenter Scan Environment:"
-  $jsonOutput = "/results/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
+  $jsonOutput = "~/results/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vcsa/inspec/vmware-vcsa-"+$global:vCVersion[0]+".0-stig-baseline"
   $command ="inspec exec $profilePath/. -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --show-progress --reporter=cli json:"+$jsonOutput
