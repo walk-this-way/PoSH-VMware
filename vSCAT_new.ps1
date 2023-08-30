@@ -121,7 +121,7 @@ Function fn_nsxscanner {
   Write-Host "Running scan of NSX Environment:"
   $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $profilePath = '/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master'
+  $profilePath = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsxt-4.x-stig-baseline-master'
   $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --reporter=cli json:$jsonOutput"
   Invoke-Expression $command
   Write-Host "NSX-T Scan Complete!"
