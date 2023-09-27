@@ -43,7 +43,7 @@ Function fn_ClearOVAFiles {
    $command = "rm /root/ran_customization"
     Invoke-Expression $command
     Write-Host "ran_customization Cleared."
-    $command = "rm /root/results/*"
+    $command = "rm /root/results/* && rm /results/*"
     Invoke-Expression $command
     Write-Host "Results Cleared."
     $command = "history -c"
