@@ -1,4 +1,4 @@
-Function fn_ClearNetwork {
+<#Function fn_ClearNetwork {
     $file = '/etc/systemd/network/10-static-en.network'
     $command = 'rm $file'
     Invoke-Expression $command
@@ -12,6 +12,17 @@ Function fn_ClearNetwork {
     Add-Content  -Path $file -Value "Domain="
     Write-Host "Network File Cleared."
 }
+#>
+
+Function fn_ClearNetwork {
+    $file = '/etc/systemd/network/10-static-en.network'
+    $command = 'cp $file /etc/systemd/network/10-static-en.network.bak'
+    Invoke-Expression $command
+    Write-Host "Old network file moved to 10-static-en.network.bak"
+    $command = 'echo -e "[Match]"\nName=e*\n\n[Network]\nAddress=\nGateway=\nDNS=\nDomain=\n" >> /etc/systemd/network/10-static-en.network'
+    Write-Host "Network File Cleared" 
+}
+
 Function fn_clearHostsFile {
     $file = '/etc/hosts*'
     $command = 'rm $file'
@@ -29,7 +40,7 @@ Function fn_clearHostsFile {
 }
 
 Function fn_ClearOVAFiles {
-    $command = "rm /root/ran_customization"
+   $command = "rm /root/ran_customization"
     Invoke-Expression $command
     Write-Host "ran_customization Cleared."
     $command = "rm /root/results/*"
