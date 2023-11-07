@@ -27,7 +27,7 @@
       { "key": "mks.enable3d",
         "value": "false"
       },
-      { "key": "XXisolation.tools.diskShrink.disableXX",
+      { "key": "isolation.tools.diskShrink.disable",
         "value": "true"
       },
       { "key": "isolation.tools.diskWiper.disable",
