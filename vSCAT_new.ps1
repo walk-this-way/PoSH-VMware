@@ -2614,7 +2614,7 @@ Function NIST800-53-VI-ESXi-CFG-01113 {
         Write-Host `t`t`t$result
 
         $global:result_array = $global:result_array+$result
-    }
+    }#
   }
 
   Function NIST800-53-VI-ESXi-CFG-00022 {
@@ -3596,9 +3596,9 @@ Function NIST800-53-VI-VC-CFG-XX105{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-XX106{
+Function NIST800-53-VI-VC-CFG-00093{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-XX106'
+  $global:VMWConfig='NIST800-53-VI-VC-CFG-00093'
   $global:description='Disable drag & drop console functionality.'
   $global:NISTcit='P2'
   $global:finding='When this is set to TRUE a user at the console of a VM (Web Console, VMRC, or other) will not be able to drag and drop data between the VM and the local client. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -4556,7 +4556,7 @@ Function fn_Load_VM_Controls {
     'NIST800-53-VI-VC-CFG-01233', 
     'NIST800-53-VI-VC-CFG-01234',
     'NIST800-53-VI-VC-CFG-XX105',
-    'NIST800-53-VI-VC-CFG-XX106',
+    'NIST800-53-VI-VC-CFG-00093',
     'NIST800-53-VI-VC-CFG-01243',
     'NIST800-53-VI-VC-CFG-01242',
     'NIST800-53-VI-VC-CFG-XX109',
