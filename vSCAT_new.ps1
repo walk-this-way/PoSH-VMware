@@ -4221,8 +4221,7 @@ Write-Host "Enter ESX SSH Credentials"
             $sshon = 0
             fn_SSH_ON
           }
-        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true -ErrorAction ignore
-        $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
+        $SSHCommand = New-SSHSession -ComputerName $VMHost -Credential $global:ESXSSHCreds -AcceptKey:$true -ErrorAction ignore        
         if ($result -eq "x") {
           Write-Host $VMHost "- FAIL" -ForegroundColor Red
         } else {
@@ -4230,6 +4229,7 @@ Write-Host "Enter ESX SSH Credentials"
         }
         if ($sshon -eq 0) {fn_SSH_OFF}
       }
+      $result = (Invoke-SSHCommand -SSHSession $SSHCommand -Command $command).Output
       fn_PressAnyKey
     }   
   
