@@ -52,6 +52,7 @@ vCenter:
 	
 vSphere (ESX):
 	- root credentials for SSH operations
+  - all Hosts must have the same root password
 
 VMware Cloud Foundations (vCF):
 
@@ -4197,7 +4198,7 @@ Write-Host "Enter ESX SSH Credentials"
   #>
     Write-Host "ESX Host Information:" -ForegroundColor Green
     Write-Host
-    Write-Host "This process requires SSH ROOT access to the ESX Hosts " -ForegroundColor Green -NoNewLine
+    Write-Host "This process requires SSH ROOT access to the ESX Hosts, all Hosts must have the same root password " -ForegroundColor Green -NoNewLine
     Write-Host "!!" -ForegroundColor Red
     Write-Host
     Write-Host "Enter the root Credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
@@ -4395,6 +4396,7 @@ Function fn_STIGMenu {
       3 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_GetESXCreds
         fn_ESXscanner
         fn_PressAnyKey
         fn_STIGMenu
