@@ -4103,13 +4103,16 @@ Function fn_GetvCenterCreds {
 
 # Get vCenter Version
   $global:vCVersion = $global:DefaultVIServer.Version
-  Write-Host "vCenter Vesion: "$global:vCVersion
+  Write-Host "vCenter Version: "$global:vCVersion
 
 # Get vCenter API Token
   $command = "curl -s -k -X POST -H 'Accept: application/json' --basic -u "+$global:VCuser+":"+$global:VCpass+" https://$global:defaultVIServer/rest/com/vmware/cis/session"
   $global:vCAPIToken = Invoke-Expression $command
   $global:vCAPIToken = $global:vCAPIToken.Remove(0,9) -replace ".{1}$"
   $global:vCAPIToken = $global:vCAPIToken -replace '[""]','' 
+
+# Confirm API token
+  Write-Host "API token: "$global:vCAPIToken 
 
 # Get and set SSH Service on vCenter
   <#if ($global:vCVersion -lt '8') {
