@@ -103,7 +103,7 @@ Function fn_sddcscanner {
   Write-Host "VCF Scan Complete!"
   }
 
-Function fn_ESXscanner { 
+Function fn_vSpherescanner { 
   Write-Host "Running ESX Host Scan:"
     $env:VISERVER=$global:defaultVIServer
     $env:VISERVER_USERNAME=$global:VCuser
@@ -111,13 +111,17 @@ Function fn_ESXscanner {
     $env:NO_COLOR=$true
   $jsonOutput = "/results/ESX_Scan_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
-  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
   Invoke-Expression $command
-  Write-Host "ESX Scan Complete!"
+  Write-Host "ESX, vCenter, and VM Scan Complete!"
 }
 
 Function fn_nsxscanner { 
+
+  <#
+  Need to write if/then check for NSX version
+  #>
   Write-Host "Running scan of NSX Environment:"
   $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
@@ -4357,10 +4361,10 @@ Function fn_STIGMenu {
     Write-Host "Scan SDDC Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan vCenter" -ForegroundColor Green
+    Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan ESX Hosts" -ForegroundColor Green
+    Write-Host "Scan vSphere (Reverse Proxy, EAM, vSphere UI, VAMI, STS, and Perfcharts)" -ForegroundColor Green
     Write-Host
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan NSX Manager" -ForegroundColor Green
@@ -4397,7 +4401,7 @@ Function fn_STIGMenu {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
-        fn_ESXscanner
+        fn_vSpherescanner
         fn_PressAnyKey
         fn_STIGMenu
       }  
