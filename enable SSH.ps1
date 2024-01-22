@@ -8,13 +8,18 @@ Connect-VIServer $vcenter
 
 #enable SSH, do not prompt for user confirmation (-confirm:$false)
 foreach($hosts in $host_list){
-	Get-VMHostService -VMHost $hosts | Where-Object {$_.Key -eq "TSM-SSH" } | Start-VMHostService -confirm:$false 
+	Write-Host -ForegroundColor GREEN "Starting SSH service on " -NoNewline
+	Write-Host -ForegroundColor YELLOW "$VMhost"
+	Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
+	}
+
 }
 
 #enable bash shell
 foreach($hosts in $host_list){
-	Get-VMHost $hosts | Get-VMHostService | Where { $_.Key -eq "TSM" } | Start-VMHostService
-	Get-VMHostService -VMHost $hosts | Where-Object {$_.Key -eq "TSM" } | Start-VMHostService -confirm:$false 
+	Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
+	Write-Host -ForegroundColor YELLOW "$VMhost"
+	Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 }
 
 Disconnect-VIServer * -confirm:$false 
