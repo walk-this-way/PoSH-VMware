@@ -10,16 +10,14 @@ Function fn_EnableSSHandShell {
 	foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Starting SSH service on " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"
-		Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
+		Get-VMHostService -VMHost $hosts | Where-Object {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 		}
-
-
 
 	#enable bash shell
 	foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"
-		Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
+		Get-VMHostService -VMHost $hosts | Where-Object {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 	}
 
 	Disconnect-VIServer * -confirm:$false 
