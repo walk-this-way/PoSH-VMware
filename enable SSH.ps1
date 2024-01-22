@@ -1,6 +1,5 @@
 
-Function fn_EnableSSHandShell
-Shell {
+Function fn_EnableSSHandShell {
 
 $host_list = Get-Content "host_list.txt"
 
@@ -19,4 +18,5 @@ foreach($hosts in $host_list){
 
 Disconnect-VIServer * -confirm:$false 
 
+}
 fn_EnableSSHandShell
