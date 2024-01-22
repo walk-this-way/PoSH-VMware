@@ -1,28 +1,29 @@
 
 Function fn_EnableSSHandShell {
 
-$host_list = Get-Content "host_list.txt"
-$vcenter = Read-Host -Prompt "Enter vCenter you want to connect to"
+	$host_list = Get-Content "host_list.txt"
+	$vcenter = Read-Host -Prompt "Enter vCenter you want to connect to"
 
-Connect-VIServer $vcenter 
+	Connect-VIServer $vcenter 
 
-#enable SSH, do not prompt for user confirmation (-confirm:$false)
-foreach($hosts in $host_list){
-	Write-Host -ForegroundColor GREEN "Starting SSH service on " -NoNewline
-	Write-Host -ForegroundColor YELLOW "$VMhost"
-	Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
+	#enable SSH, do not prompt for user confirmation (-confirm:$false)
+	foreach($hosts in $host_list){
+		Write-Host -ForegroundColor GREEN "Starting SSH service on " -NoNewline
+		Write-Host -ForegroundColor YELLOW "$VMhost"
+		Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
+		}
+
+
+
+	#enable bash shell
+	foreach($hosts in $host_list){
+		Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
+		Write-Host -ForegroundColor YELLOW "$VMhost"
+		Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 	}
 
-}
-
-#enable bash shell
-foreach($hosts in $host_list){
-	Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
-	Write-Host -ForegroundColor YELLOW "$VMhost"
-	Get-VMHost | Get-VMHostService | ? {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
-}
-
-Disconnect-VIServer * -confirm:$false 
+	Disconnect-VIServer * -confirm:$false 
 
 }
+
 fn_EnableSSHandShell
