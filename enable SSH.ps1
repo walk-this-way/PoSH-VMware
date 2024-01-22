@@ -1,5 +1,5 @@
 
-Function fn_EnableSSHand
+Function fn_EnableSSHandShell
 Shell {
 
 $host_list = Get-Content "host_list.txt"
