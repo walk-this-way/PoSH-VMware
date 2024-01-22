@@ -2,7 +2,7 @@
 Function fn_EnableSSHandShell {
 
 $host_list = Get-Content "host_list.txt"
-
+$vcenter = Read-Host -Prompt "Enter vCenter you want to connect to"
 
 Connect-VIServer $vcenter 
 
