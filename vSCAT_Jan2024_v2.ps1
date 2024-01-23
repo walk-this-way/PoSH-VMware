@@ -3845,7 +3845,7 @@ Function VMCH-70-000007 {
   $global:NISTcit='CM-6 b'
   $global:finding='If the virtual machine advanced setting "isolation.tools.hgfsServerSet.disable" does not exist or is not set to "true", this is a finding.'
   $global:xResult='"isolation.tools.hgfsServerSet.disable" value set to "true"'
-  $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name isolation.tools.hgfsServerSet.disable -Value true'
+  $global:command= 'Get-VM -Name $VM | New-AdvancedSetting -Name isolation.tools.hgfsServerSet.disable -Value true'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3874,7 +3874,7 @@ Function VMCH-70-000013 {
   $global:NISTcit='CM-6 b'
   $global:finding='If the virtual machine advanced setting "RemoteDisplay.maxConnections" does not exist or is not set to "1", this is a finding.'
   $global:xResult='Find the "RemoteDisplay.maxConnections" value and set it to "1"'
-  $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name RemoteDisplay.maxConnections -Value 1'
+  $global:command= 'Get-VM -Name $VM | New-AdvancedSetting -Name RemoteDisplay.maxConnections -Value 1'
   fn_Print_VM_Control_Info
 
 if($global:allVM )
@@ -3903,7 +3903,6 @@ Function VMCH-70-000020 {
   $global:NISTcit='CM-6 b'
   $global:finding='Ask the system administrator if hardened, patched templates are used for VM creation and properly configured operating system deployments, including applications dependent and nondependent on VM-specific configurations.'
   $global:xResult='This check is a manual or policy based check'
-  $global:command='Get-VM "VM Name"'
   fn_Print_VM_Control_Info
 
 if($global:allVM )
@@ -3932,7 +3931,6 @@ Function VMCH-70-000021 {
   $global:NISTcit='CM-6 b'
   $global:finding='If a VM console is used to perform VM management tasks other than for troubleshooting VM issues, this is a finding. If SSH and/or terminal management services are exclusively used to perform management tasks, this is not a finding.'
   $global:xResult='This check is a manual or policy based check'
-  $global:command='Get-VM "VM Name"'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3961,7 +3959,7 @@ Function VMCH-70-000025 {
   $global:NISTcit='CM-6 b'
   $global:finding='logging is not enable'
   $global:xResult='Ensure that the checkbox next to "Enable logging" is checked.'
-  $global:command='Get-VM | Where {$_.ExtensionData.Config.Flags.EnableLogging -ne "True"}'
+  $global:command='Get-VM -Name $VM | Where {$_.ExtensionData.Config.Flags.EnableLogging -ne "True"}'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
