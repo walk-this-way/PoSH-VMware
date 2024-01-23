@@ -1,6 +1,6 @@
 <#
 Version Notes
-v23_6_29 re-branded and NSX Scan Funciton active
+Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans)
 #>
 
 # Set / Clear all variables 
