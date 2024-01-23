@@ -5,9 +5,10 @@ HealthCare VCF security assessment script
 This code checks envirnoment variables against DISA STIG, NIST 800-53 standards, and vmware best practices to determine security posture of associated VMware components. 
 
 ## Feature Backlog
+- [ ] connect to new vcenter without dumping script
 - [ ] connect to multiple vcenter to scan vcenter applicance (vm BB)
 - [ ] fix input file disa stig scan line 115 get-esxi commandlet, use v2 parameter
-- [ ] VM with VM name not found, under george extras NSX scan 4124, 4128 error OBS_rootpass ???
+- [X] VM with VM name not found, under george extras NSX scan 4124, 4128 error OBS_rootpass ???
 - [ ] for NSX scan, update "$version.x" like esx check
 - [ ] pass "$user.name" for all appliances SSHing into, just ask for passwords
 
