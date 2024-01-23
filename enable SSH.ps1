@@ -1,6 +1,8 @@
 
 Function fn_EnableSSHandShell {
 
+	Write-Host -ForegroundColor RED "If you haven't created a host_list.txt file, stop now and create"
+	
 	$host_list = Get-Content "host_list.txt"
 	$vcenter = Read-Host -Prompt "Enter vCenter you want to connect to"
 
