@@ -109,7 +109,7 @@ Function fn_ESXiscanner {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-  $jsonOutput = "/results/ESX_Scan_"+$global:date
+  $jsonOutput = "/results/ESX_Scan_"+$global:defaultVIServer"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -123,7 +123,7 @@ Function fn_VMscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/results/VM_"+$global:date
+    $jsonOutput = "/results/VM_"+$global:defaultVIServer"_"+$global:date
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -137,7 +137,7 @@ Function fn_nsxscanner {
   Need to write if/then check for NSX version
   #>
   Write-Host "Running scan of NSX Environment:"
-  $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date
+  $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master'
   $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --show-progress --reporter=cli json:$jsonOutput"
