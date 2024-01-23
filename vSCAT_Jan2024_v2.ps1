@@ -109,7 +109,7 @@ Function fn_ESXiscanner {
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
-    $jsonOutput = "/results/ESX_Scan_"+$global:defaultVIServer"_"+$global:date+".json"
+    $jsonOutput = "/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
   $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
