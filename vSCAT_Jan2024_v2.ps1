@@ -1,7 +1,6 @@
 <#
 Version Notes
 v23_6_29 re-branded and NSX Scan Funciton active
-Testing
 #>
 
 # Set / Clear all variables 
