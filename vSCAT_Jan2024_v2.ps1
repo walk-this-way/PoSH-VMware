@@ -4959,4 +4959,3 @@ $host.UI.RawUI.BackgroundColor = "Black"
 fn_Welcome
 fn_MainMenu
 fn_GetAppIP 
-fn_Collector
