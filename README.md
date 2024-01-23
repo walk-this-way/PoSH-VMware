@@ -33,9 +33,9 @@ Fix deployment script, have vSCAT.ps1 start on boot instead of shell access
 If you would like to contribute to this product, please reach out directly to the authors below. 
 
 ## Authors and acknowledgment
-wteri@vmware.com
+teri.walker@broadcom.com
 
-kstiegler@vmware.com
+kevin.stiegler@broadcom.com
 
 ## License
 This script is used for the PSO Security Assessments of VCF, NSX, VCenter, and ESXi components. Not intended for commerical use or distribution. 
