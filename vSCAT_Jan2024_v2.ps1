@@ -53,19 +53,27 @@ vCenter:
 vSphere (ESX):
 	- root credentials for SSH operations
   - all Hosts must have the same root password
+  - root BASH shell configured (https://kb.vmware.com/s/article/2100508)
+  - Enable root login over SSH 
+  (https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/v2v_guide/preparation_before_the_p2v_migration-enable_root_login_over_ssh)
 
 VMware Cloud Foundations (vCF):
-
 	- IP Address or FQDN of SDDC Manager
 	- SSH enabled on SDDC Manager
 	- root account credentials for SSH operations
 	- SDDC Manager SSO Administrtor Account Credentials (administrator@vsphere.local)
+  - root BASH shell configured (https://kb.vmware.com/s/article/2100508)
+  - Enable root login over SSH 
+  (https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/v2v_guide/preparation_before_the_p2v_migration-enable_root_login_over_ssh)
 
 NSX Global Manager:
 	- VIP Address or FQDN of NSX Global Manager
 	- SSH enabled on NSX Managers
 	- root account credentials for SSH operations
 	- admin account credentials for API operations
+  - root BASH shell configured (https://kb.vmware.com/s/article/2100508)
+  - Enable root login over SSH 
+  (https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/v2v_guide/preparation_before_the_p2v_migration-enable_root_login_over_ssh)
     " -ForegroundColor Green
     fn_PressAnyKey
 }
