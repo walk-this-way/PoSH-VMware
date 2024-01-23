@@ -3285,9 +3285,9 @@ Function NIST800-53-VI-VC-CFG-00102{
    }
  }
 }
-Function NIST800-53-VI-VC-CFG-00097{
+Function VMCH-80-000201{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00097'
+  $global:VMWConfig='VMCH-80-000201'
   $global:description='Lock the VM guest session when the remote console is disconnected.'
   $global:NISTcit='P2'
   $global:finding='An attacker can take advantage of console sessions left logged in.'
@@ -3496,9 +3496,9 @@ Function NIST800-53-VI-VC-CFG-01233{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00097{
+Function VMCH-67-000014{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00097'
+  $global:VMWConfig='VMCH-67-000014'
   $global:description='An unimplemented parameter on ESXi.'
   $global:NISTcit='P1'
   $global:finding='This parameter applies to an ESXi feature that is no longer present in this product version. Setting or changing this parameter has no effect on security.'
@@ -3626,7 +3626,7 @@ Function NIST800-53-VI-VC-CFG-XX104{
   $global:description='An unimplemented parameter on ESXi.'
   $global:NISTcit='P0'
   $global:finding='This parameter may be applicable to other VMware products, but is not applicable to vSphere. It is not implemented on ESXi. Setting or changing this parameter has no effect on security on ESXi.'
-  $global:xResult='Not Set'
+  $global:xResult='True'
   $global:command = 'Get-VM -Name $VM | Get-AdvancedSetting isolation.device.edit.disable'
   
   fn_Print_VM_Control_Info
@@ -4668,8 +4668,6 @@ Function fn_STIGMenu {
     }
 
 }
-
-
 Function fn_PressAnyKey {
     Write-Host "Press " -ForegroundColor Yellow -NoNewLine
     Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
@@ -4682,7 +4680,6 @@ Function fn_Quit  {
     Write-Host "Finished"
     exit
 }
-
 Function fn_Load_vCenter_Controls {
   # Build Control Array for vCenter Scan
   $global:Control_Array = @(
@@ -4796,7 +4793,7 @@ Function fn_Load_VM_Controls {
   $global:Control_Array = @(
     'NIST800-53-VI-VC-CFG-01244',
     'NIST800-53-VI-VC-CFG-XX103',
-    #'NIST800-53-VI-VC-CFG-XX104',
+    'NIST800-53-VI-VC-CFG-XX104',
     'NIST800-53-VI-VC-CFG-00065', # Inludes 00066, 00067, and 00156
     'NIST800-53-VI-VC-CFG-00155',
     'NIST800-53-VI-VC-CFG-00068', 
@@ -4806,7 +4803,7 @@ Function fn_Load_VM_Controls {
     'NIST800-53-VI-VC-CFG-00074',
     'NIST800-53-VI-VC-CFG-00075',
     'NIST800-53-VI-VC-CFG-00096',
-    #'NIST800-53-VI-VC-CFG-00097',
+    'NIST800-53-VI-VC-CFG-00097',
     'NIST800-53-VI-VC-CFG-00099',
     'NIST800-53-VI-VC-CFG-00101',
     'NIST800-53-VI-VC-CFG-00102',
@@ -4821,7 +4818,9 @@ Function fn_Load_VM_Controls {
     'NIST800-53-VI-VC-CFG-01242',
     'NIST800-53-VI-VC-CFG-XX109',
     'NIST800-53-VI-VC-CFG-00154',
-    'NIST800-53-VI-VC-CFG-X0415'
+    'NIST800-53-VI-VC-CFG-X0415', 
+    'VMCH-80-000201',
+    'VMCH-67-000014'
   )
 }
 
