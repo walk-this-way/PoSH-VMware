@@ -4542,16 +4542,6 @@ Function fn_MainMenu {
         fn_MainMenu
         }
 
-      4 {
-        Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}        
-        fn_Build_VM_CSV
-        fn_load_New_VM_Controls
-        fn_RunScan
-        fn_PressAnyKey
-        fn_MainMenu
-        }  
-
         A {
           Clear-Host
           fn_SSH_Firewall_AddIP
