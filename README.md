@@ -1,21 +1,15 @@
 ## Name
-PSO-security assessments script
+HealthCare VCF security assessment script
 
 ## Description
-This code checks envirnoment variables against DISA STIG, NIST 800-53 standards, and vmware best practices to determine security risk to associated VMware components. 
+This code checks envirnoment variables against DISA STIG, NIST 800-53 standards, and vmware best practices to determine security posture of associated VMware components. 
 
 ## Feature Backlog
-- [x] Disable/Enable LockDownMode 
-- [x] change command output to different color (currently Blue)
-- [ ] fix 4 NIST functions that are currently commented out
-- [x] verify SSH enabled on hosts prior to running code
-- [X] show clusters available to scan
-- [X] allow selection of clusters to scan
-- [X] combine scripts
-- [X] update menu 
-- [X] integrated https://github.com/vmware/dod-compliance-and-automation for VCF/NSX STIG compliance scanning
-- [X] fix $global.*creds variables 
-- [X] added Heimdall docker for quick visualization report of scans.json output 
+- [ ] connect to multiple vcenter to scan vcenter applicance (vm BB)
+- [ ] fix input file disa stig scan line 115 get-esxi commandlet, use v2 parameter
+- [ ] VM with VM name not found, under george extras NSX scan 4124, 4128 error OBS_rootpass ???
+- [ ] for NSX scan, update "$version.x" like esx check
+- [ ] pass "$user.name" for all appliances SSHing into, just ask for passwords
 
 ## Visuals
 Pending creation
@@ -30,7 +24,7 @@ There is no official support for this code. Please reach out to authors if you n
 Fix deployment script, have vSCAT.ps1 start on boot instead of shell access
 
 ## Contributing
-If you would like to contribute to this product, please reach out directly to the authors below. 
+If you would like to contribute to this product, please reach out directly to the authors below. <b> PLEASE DO NOT MERGE TO DIRECTLY TRUNK</b>
 
 ## Authors and acknowledgment
 teri.walker@broadcom.com
