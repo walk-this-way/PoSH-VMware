@@ -111,14 +111,8 @@ Function fn_ESXiscanner {
     $env:NO_COLOR=$true
     $jsonOutput = "/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+"'.0-stig-baseline/esxi/"
-  $command ="inspec exec "+$profilePath+ "
-  
-  
-  
-  
-  
-  -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+  $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi/"
+  $command ="inspec exec "+$profilePath+ "--show-progress -t ssh://"+$global:ESXSSHuser+"@"+$global:defaultVIServer+" --password "+$global:ESXSSHpass+"--input-file"+ $profilePath+" inputs-example.yml --show-progress --reporter=cli json:"+$jsonOutput  
   Invoke-Expression $command
   Write-Host "ESX Scan Complete!"
 }
@@ -132,7 +126,7 @@ Function fn_VMscanner {
     $jsonOutput = "/results/VM_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
-    $command = "inspec exec"+ $profilePath/. +"--show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+" --input-file"+ $profilePath+"/inspec.yml --reporter=cli json:"+$jsonOutput     
+    $command = "inspec exec"+ $profilePath +"--show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+" --input-file"+ $profilePath+"/inspec.yml --reporter=cli json:"+$jsonOutput     
     Invoke-Expression $command
     Write-Host "VM Scan Complete!"
   }
