@@ -126,7 +126,7 @@ Function fn_VMscanner {
     $jsonOutput = "/results/VM_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
-    $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password '"+$global:VCpass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --reporter=cli json:$jsonOutput" 
+    $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password '"+$global:VCpass+"' --input-file /root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm/inspec.yml" --reporter=cli json:$jsonOutput
     Invoke-Expression $command
     Write-Host "VM Scan Complete!"
   }
@@ -4644,8 +4644,8 @@ Function fn_STIGMenu {
       3 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        
-        fn_ESXiscanner
+        fn_GetvCenterCreds
+        fn_vCscanner
         fn_PressAnyKey
         fn_STIGMenu
       }  
