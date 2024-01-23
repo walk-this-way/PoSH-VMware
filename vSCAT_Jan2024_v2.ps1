@@ -123,7 +123,7 @@ Function fn_VMscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/results/VM_"+$global:defaultVIServer"_"+$global:date+".json"
+    $jsonOutput = "/results/VM_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
     $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml --reporter=cli json:$jsonOutput" 
