@@ -4625,7 +4625,7 @@ Function fn_STIGMenu {
           fn_STIGMenu
         }  
       
-      2 {
+      3 {
         Clear-Host
         fn_GetvCenterCreds
         fn_vCscanner
@@ -4633,7 +4633,7 @@ Function fn_STIGMenu {
         fn_STIGMenu
       }  
 
-      3 {
+      4 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetvCenterCreds
