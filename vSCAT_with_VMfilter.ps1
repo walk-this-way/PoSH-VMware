@@ -1,6 +1,6 @@
 <#
 Version Notes
-v23_6_29 re-branded and NSX Scan Funciton active
+VM filtering - moving to trunk
 #>
 
 # Set / Clear all variables 
