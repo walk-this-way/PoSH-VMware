@@ -2547,7 +2547,7 @@ Function NIST800-53-VI-ESXi-CFG-01112 {
   $global:description='Disable the OpenSLP service on the host'
   $global:NISTcit='CM-6b'
   $global:finding='Disable the OpenSLP service on the host'
-  $global:xResult='slpd                    off'
+  $global:xResult='slpd off'
   $global:command='chkconfig --list | grep slpd'
 
   fn_Print_ESX_Control_Info
