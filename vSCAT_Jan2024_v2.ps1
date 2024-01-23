@@ -1883,6 +1883,7 @@ Function NIST800-53-VI-ESXi-CFG-00125 {
       $global:result_array = $global:result_array+$result
   }
 }
+
 Function NIST800-53-VI-ESXi-CFG-00129 {
   $global:VMWConfig='NIST800-53-VI-ESXi-CFG-00129'
   $global:description='Install Security Patches and Updates for ESXi hosts.'
@@ -1891,28 +1892,19 @@ Function NIST800-53-VI-ESXi-CFG-00129 {
   $global:xResult='Site Specific'
   $global:command=''
   fn_Print_ESX_Control_Info
-
-  $allHosts = Get-VMHost | Sort-Object Name
-
-    $allHosts = Get-VMHost | Sort-Object Name
-    $List = @()
-
-    foreach ($VMHost in $allHosts) {
-
-        $VMHostName = $VMhost.Name
-        $Cluster = $VMhost.Parent
-        $esxcli = $VMHost | Get-EsxCli
-
-        $List += $esxcli.software.vib.list() | Select-Object @{N="VMHostName"; E={$VMHostName}},@{N="Cluster"; E={$Cluster}},*
-        $result="See ESXi Patches.csv"
-        Write-Host $VMHost -NoNewLine
-        Write-Host `t`t`t$result 
-        $global:result_array = $global:result_array+$result
-
-
-    $List | Export-Csv -Path "./results/$($defaultVIServer) - $($date) - ESXi Patches.csv" -NoTypeInformation
-
+  $allHosts = Get-VMHost *mgmt* | Sort-Object Name
+  $List = @()
+  foreach ($VMHost in $allHosts) {
+    $VMHostName = $VMhost.Name
+    $Cluster = $VMhost.Parent
+    $esxcli = $VMHost | Get-EsxCli
+    $List += $esxcli.software.vib.list() | Select-Object @{N="VMHostName"; E={$VMHostName}},@{N="Cluster"; E={$Cluster}},*
+    $result="See ESXi Patches.csv"
+    Write-Host $VMHost -NoNewLine
+    Write-Host `t`t`t$result
+    $global:result_array = $global:result_array+$result
   }
+  $List | Export-Csv -Path "$($defaultVIServer) - $($date) - ESXi Patches.csv" -NoTypeInformation
 }
 
 
