@@ -4524,6 +4524,7 @@ Function fn_MainMenu {
   
       2 {
         Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetvCenterCreds
         fn_GetESXCreds
         fn_Build_ESX_CSV
@@ -4534,6 +4535,7 @@ Function fn_MainMenu {
 
       3 {
         Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetvCenterCreds
         fn_Build_VM_CSV
         fn_Load_VM_Controls
@@ -4937,6 +4939,14 @@ Function fn_Build_VM_CSV {
   $date = (Get-date).tostring("dd-MM-yyyy-hh-mm")
   $global:csvFile = "./results/$($defaultVIServer) - $($date) - VM Scan.csv"
 
+   # Derrill added this
+
+   Write-Host "You can filter the names of the VMs being tested" -ForegroundColor Green
+   Write-Host "Enter the search string to filter or just press Enter to not filter" -ForegroundColor Green
+   Write-Host "Filtering must have a * wildcard at the front or back (or both) to match multiple VMs" -ForegroundColor Green
+   Write-Host "Enter Optional Hostname Filter  " -ForegroundColor Yellow -NoNewLine
+   $global:filter = Read-Host
+   
   # Build first Column of report
 
   $FirstColumn = @('VMware ID', 'Priority', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
