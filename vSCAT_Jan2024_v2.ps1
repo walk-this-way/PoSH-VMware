@@ -132,7 +132,6 @@ Function fn_VMscanner {
   }
 
 Function fn_nsxscanner { 
-
   <#
   Need to write if/then check for NSX version
   #>
@@ -274,150 +273,6 @@ Function GET-vCENTER-BUILD {
   $global:result_array = $global:result_array+$result
 }
 
-Function VMCH-70-000007 {
-    $global:VMWConfig='VMCH-70-000007'
-    $global:description='Host Guest File System (HGFS) file transfers must be disabled on the virtual machine (VM).'
-    $global:NISTcit='CM-6 b'
-    $global:finding='If the virtual machine advanced setting "isolation.tools.hgfsServerSet.disable" does not exist or is not set to "true", this is a finding.'
-    $global:xResult='"isolation.tools.hgfsServerSet.disable" value set to "true"'
-    $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name isolation.tools.hgfsServerSet.disable -Value true'
-    fn_Print_VM_Control_Info
-
-    if($global:allVM )
-    {
-        foreach ($VM in $global:allVM ) {   
-        $result = Invoke-Expression $global:command.tostring()
-  
-        if (!$result) {$result = "Not Set"}
-  
-       Write-Host $VM -NoNewLine
-  
-        if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
-  
-        if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
-  
-        Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
-  
-        $global:result_array = $global:result_array+$result
-     } 
-   }
-  }
-
-  Function VMCH-70-000013 {
-    $global:VMWConfig='VMCH-70-000013'
-    $global:description='By default, more than one user at a time can connect to remote console sessions. When multiple sessions are activated, each terminal window receives a notification about the new session. If an administrator in the VM logs in using a VMware remote console during their session, a nonadministrator in the VM might connect to the console and observe the administrators actions.'
-    $global:NISTcit='CM-6 b'
-    $global:finding='If the virtual machine advanced setting "RemoteDisplay.maxConnections" does not exist or is not set to "1", this is a finding.'
-    $global:xResult='Find the "RemoteDisplay.maxConnections" value and set it to "1"'
-    $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name RemoteDisplay.maxConnections -Value 1'
-    fn_Print_VM_Control_Info
-
-  if($global:allVM )
-  {
-      foreach ($VM in $global:allVM ) {   
-      $result = Invoke-Expression $global:command.tostring()
-
-      if (!$result) {$result = "Not Set"}
-
-     Write-Host $VM -NoNewLine
-
-      if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
-
-      if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
-
-      Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
-
-      $global:result_array = $global:result_array+$result
-   } 
- }
-  }
-
-  Function VMCH-70-000020 {
-    $global:VMWConfig='VMCH-70-000020'
-    $global:description='System administrators must use templates to deploy virtual machines (VMs) whenever possible.'
-    $global:NISTcit='CM-6 b'
-    $global:finding='Ask the system administrator if hardened, patched templates are used for VM creation and properly configured operating system deployments, including applications dependent and nondependent on VM-specific configurations.'
-    $global:xResult='This check is a manual or policy based check'
-    $global:command='Get-VM "VM Name"'
-    fn_Print_VM_Control_Info
-
-  if($global:allVM )
-  {
-      foreach ($VM in $global:allVM ) {   
-      $result = Invoke-Expression $global:command.tostring()
-
-      if (!$result) {$result = "Not Set"}
-
-     Write-Host $VM -NoNewLine
-
-      if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
-
-      if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
-
-      Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
-
-      $global:result_array = $global:result_array+$result
-   } 
- }
-  }
-
-  Function VMCH-70-000021 {
-    $global:VMWConfig='VMCH-70-000021'
-    $global:description='The VM console enables a connection to the console of a virtual machine, in effect seeing what a monitor on a physical server would show. The VM console also provides power management and removable device connectivity controls, which could allow a malicious user to bring down a VM. In addition, it impacts performance on the service console, especially if many VM console sessions are open simultaneously check, Remote management services, such as terminal services and Secure Shell (SSH), must be used to interact with VMs.'
-    $global:NISTcit='CM-6 b'
-    $global:finding='If a VM console is used to perform VM management tasks other than for troubleshooting VM issues, this is a finding. If SSH and/or terminal management services are exclusively used to perform management tasks, this is not a finding.'
-    $global:xResult='This check is a manual or policy based check'
-    $global:command='Get-VM "VM Name"'
-    fn_Print_VM_Control_Info
-
-    if($global:allVM )
-    {
-        foreach ($VM in $global:allVM ) {   
-        $result = Invoke-Expression $global:command.tostring()
-  
-        if (!$result) {$result = "Not Set"}
-  
-       Write-Host $VM -NoNewLine
-  
-        if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
-  
-        if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
-  
-        Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
-  
-        $global:result_array = $global:result_array+$result
-     } 
-   }
-  }
-
-  Function VMCH-70-000025 {
-    $global:VMWConfig='VMCH-70-000025'
-    $global:description='Logging must be enabled on the virtual machine (VM).'
-    $global:NISTcit='CM-6 b'
-    $global:finding='logging is not enable'
-    $global:xResult='Ensure that the checkbox next to "Enable logging" is checked.'
-    $global:command='Get-VM | Where {$_.ExtensionData.Config.Flags.EnableLogging -ne "True"}'
-    fn_Print_VM_Control_Info
-
-    if($global:allVM )
-    {
-        foreach ($VM in $global:allVM ) {   
-        $result = Invoke-Expression $global:command.tostring()
-  
-        if (!$result) {$result = "Not Set"}
-  
-       Write-Host $VM -NoNewLine
-  
-        if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
-  
-        if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
-  
-        Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
-  
-        $global:result_array = $global:result_array+$result
-     } 
-   }
-}
 Function NIST800-53-VI-VC-CFG-00415 {
   $global:VMWConfig='NIST800-53-VI-VC-CFG-00415'
   $global:description='Verify Users and Roles'
@@ -3461,9 +3316,6 @@ Function NIST800-53-VI-VC-CFG-00097{
    }
  }
 }
-
-
-
 Function NIST800-53-VI-VC-CFG-01215{
 
   $global:VMWConfig='NIST800-53-VI-VC-CFG-01215'
@@ -3987,6 +3839,152 @@ Function NIST800-53-VI-VC-CFG-X0415{
  }
 }
 
+Function VMCH-70-000007 {
+  $global:VMWConfig='VMCH-70-000007'
+  $global:description='Host Guest File System (HGFS) file transfers must be disabled on the virtual machine (VM).'
+  $global:NISTcit='CM-6 b'
+  $global:finding='If the virtual machine advanced setting "isolation.tools.hgfsServerSet.disable" does not exist or is not set to "true", this is a finding.'
+  $global:xResult='"isolation.tools.hgfsServerSet.disable" value set to "true"'
+  $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name isolation.tools.hgfsServerSet.disable -Value true'
+  fn_Print_VM_Control_Info
+
+  if($global:allVM )
+  {
+      foreach ($VM in $global:allVM ) {   
+      $result = Invoke-Expression $global:command.tostring()
+
+      if (!$result) {$result = "Not Set"}
+
+     Write-Host $VM -NoNewLine
+
+      if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
+
+      if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
+
+      Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
+
+      $global:result_array = $global:result_array+$result
+   } 
+ }
+}
+
+Function VMCH-70-000013 {
+  $global:VMWConfig='VMCH-70-000013'
+  $global:description='By default, more than one user at a time can connect to remote console sessions. When multiple sessions are activated, each terminal window receives a notification about the new session. If an administrator in the VM logs in using a VMware remote console during their session, a nonadministrator in the VM might connect to the console and observe the administrators actions.'
+  $global:NISTcit='CM-6 b'
+  $global:finding='If the virtual machine advanced setting "RemoteDisplay.maxConnections" does not exist or is not set to "1", this is a finding.'
+  $global:xResult='Find the "RemoteDisplay.maxConnections" value and set it to "1"'
+  $global:command='Get-VM "VM Name" | New-AdvancedSetting -Name RemoteDisplay.maxConnections -Value 1'
+  fn_Print_VM_Control_Info
+
+if($global:allVM )
+{
+    foreach ($VM in $global:allVM ) {   
+    $result = Invoke-Expression $global:command.tostring()
+
+    if (!$result) {$result = "Not Set"}
+
+   Write-Host $VM -NoNewLine
+
+    if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
+
+    if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
+
+    Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
+
+    $global:result_array = $global:result_array+$result
+ } 
+}
+}
+
+Function VMCH-70-000020 {
+  $global:VMWConfig='VMCH-70-000020'
+  $global:description='System administrators must use templates to deploy virtual machines (VMs) whenever possible.'
+  $global:NISTcit='CM-6 b'
+  $global:finding='Ask the system administrator if hardened, patched templates are used for VM creation and properly configured operating system deployments, including applications dependent and nondependent on VM-specific configurations.'
+  $global:xResult='This check is a manual or policy based check'
+  $global:command='Get-VM "VM Name"'
+  fn_Print_VM_Control_Info
+
+if($global:allVM )
+{
+    foreach ($VM in $global:allVM ) {   
+    $result = Invoke-Expression $global:command.tostring()
+
+    if (!$result) {$result = "Not Set"}
+
+   Write-Host $VM -NoNewLine
+
+    if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
+
+    if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
+
+    Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
+
+    $global:result_array = $global:result_array+$result
+ } 
+}
+}
+
+Function VMCH-70-000021 {
+  $global:VMWConfig='VMCH-70-000021'
+  $global:description='The VM console enables a connection to the console of a virtual machine, in effect seeing what a monitor on a physical server would show. The VM console also provides power management and removable device connectivity controls, which could allow a malicious user to bring down a VM. In addition, it impacts performance on the service console, especially if many VM console sessions are open simultaneously check, Remote management services, such as terminal services and Secure Shell (SSH), must be used to interact with VMs.'
+  $global:NISTcit='CM-6 b'
+  $global:finding='If a VM console is used to perform VM management tasks other than for troubleshooting VM issues, this is a finding. If SSH and/or terminal management services are exclusively used to perform management tasks, this is not a finding.'
+  $global:xResult='This check is a manual or policy based check'
+  $global:command='Get-VM "VM Name"'
+  fn_Print_VM_Control_Info
+
+  if($global:allVM )
+  {
+      foreach ($VM in $global:allVM ) {   
+      $result = Invoke-Expression $global:command.tostring()
+
+      if (!$result) {$result = "Not Set"}
+
+     Write-Host $VM -NoNewLine
+
+      if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
+
+      if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
+
+      Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
+
+      $global:result_array = $global:result_array+$result
+   } 
+ }
+}
+
+Function VMCH-70-000025 {
+  $global:VMWConfig='VMCH-70-000025'
+  $global:description='Logging must be enabled on the virtual machine (VM).'
+  $global:NISTcit='CM-6 b'
+  $global:finding='logging is not enable'
+  $global:xResult='Ensure that the checkbox next to "Enable logging" is checked.'
+  $global:command='Get-VM | Where {$_.ExtensionData.Config.Flags.EnableLogging -ne "True"}'
+  fn_Print_VM_Control_Info
+
+  if($global:allVM )
+  {
+      foreach ($VM in $global:allVM ) {   
+      $result = Invoke-Expression $global:command.tostring()
+
+      if (!$result) {$result = "Not Set"}
+
+     Write-Host $VM -NoNewLine
+
+      if ($VM.Name.length -le 7) {Write-Host `t -NoNewLine}  
+
+      if ($result -eq $global:xResult) {$fgColor="White"} else {$fgColor="Red"} #Set Warning Color for screen output based on expected result
+
+      Write-Host `t`t`t`t`t$result -ForegroundColor $fgColor
+
+      $global:result_array = $global:result_array+$result
+   } 
+ }
+}
+
+
 ######################################################################################################################################################################################################################################################################################################
 ######################################################################################################################################################################################################################################################################################################
 ######################################################################################################################################################################################################################################################################################################
@@ -4137,7 +4135,7 @@ Function fn_getNSXCreds {
   if ($global:NSXmgr -eq '') {
     Write-Host "NSX-T Manager Information:" -ForegroundColor Green 
     Write-Host
-    Write-Host "Enter the IP Address or FQDN of the NSX-T Manager: " -ForegroundColor Green -NoNewLine
+    Write-Host "Enter the VIP Address of Global Manager: " -ForegroundColor Green -NoNewLine
     $global:NSXmgr = Read-Host
     Write-Host
     Write-Host "Testing ability to find $global:NSXmgr..."
@@ -4608,13 +4606,13 @@ Function fn_STIGMenu {
     Write-Host "Scan SDDC Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
+    Write-Host "Scan NSX Global Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan ESXi" -ForegroundColor Green
+    Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan NSX Manager" -ForegroundColor Green
+    Write-Host "Scan ESXi" -ForegroundColor Green
     Write-Host
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
@@ -4638,10 +4636,18 @@ Function fn_STIGMenu {
           fn_PressAnyKey
           fn_STIGMenu
         }
-
+      2 {
+          Clear-Host
+          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+          fn_getNSXCreds
+          fn_nsxscanner
+          fn_PressAnyKey
+          fn_STIGMenu
+        }  
+      
       2 {
         Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_GetvCenterCreds
         fn_vCscanner
         fn_PressAnyKey
         fn_STIGMenu
@@ -4650,7 +4656,7 @@ Function fn_STIGMenu {
       3 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_GetESXCreds
+        
         fn_ESXiscanner
         fn_PressAnyKey
         fn_STIGMenu
@@ -4716,7 +4722,7 @@ Function fn_Load_vCenter_Controls {
     'NIST800-53-VI-VC-CFG-01211',
     'NIST800-53-VI-VC-CFG-01212', 
     'VMCH-70-000007',
-    'VMCH-70-0000013',
+    'VMCH-70-000013',
     'VMCH-70-000020',
     'VMCH-70-000021',
     'VMCH-70-000025'
