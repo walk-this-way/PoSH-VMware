@@ -3265,7 +3265,7 @@ Function NIST800-53-VI-VC-CFG-00102{
   $global:NISTcit='P2'
   $global:finding='By enabling a VM to get detailed information about the physical host, an adversary could potentially use this information to inform further attacks on the host. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
   $global:xResult='FALSE'
-  $global:command = 'Get-VM $vm | Get-AdvancedSetting -Name tools.guestlib.enableHostInfo | Select-Object -Property Name, Value'
+  $global:command = 'Get-VM $VM | Get-AdvancedSetting -Name tools.guestlib.enableHostInfo | Select-Object -Property Name, Value'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3383,7 +3383,7 @@ Function NIST800-53-VI-VC-CFG-01234{
   $global:NISTcit='P1'
   $global:finding='By default a VM uses "opportunistic" vMotion encryption, so migrations to another host use encryption if available, but if not it will vMotion without encryption. Setting this to "required" ensures that if encryption is not available the vMotion does not proceed.'
   $global:xResult='required'
-  $global:command='(Get-VM $vm).ExtensionData.Config.MigrateEncryption'
+  $global:command='(Get-VM $VM).ExtensionData.Config.MigrateEncryption'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3413,7 +3413,7 @@ Function NIST800-53-VI-VC-CFG-00154{
   $global:NISTcit='P1'
   $global:finding='VMs with Independent non-persistent disks.'
   $global:xResult='TRUE'
-  $global:command='Get-VM $vm | Get-HardDisk'
+  $global:command='Get-VM $VM | Get-HardDisk'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3443,7 +3443,7 @@ Function NIST800-53-VI-VC-CFG-00561{
   $global:NISTcit='P1'
   $global:finding='VThe VMware DirectPath I/O features allow virtual machines to access system hardware directly. This has implications for risk mitigation features such as vMotion, DRS, and High Availability, but also may allow an attacker more privileged access to underlying hardware and the system bus. Ensure that VMs allowed to access hardware directly need this privilege and add compensating controls to ensure the guest OS security.'
   $global:xResult='Not Set'
-  $global:command = 'Get-VM $vm | Get-AdvancedSetting -Name pciPassthru*.present | Select-Object -Property Name, Value'
+  $global:command = 'Get-VM $VM | Get-AdvancedSetting -Name pciPassthru*.present | Select-Object -Property Name, Value'
   
   fn_Print_VM_Control_Info
 
