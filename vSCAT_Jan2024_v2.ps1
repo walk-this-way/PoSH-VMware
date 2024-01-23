@@ -4478,13 +4478,10 @@ Function fn_MainMenu {
     Write-Host "Scan vCenter (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan ESX Hosts (VMware Best Practices, George Extras)" -ForegroundColor Green
+    Write-Host "Scan ESX Hosts (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan VM Configurations (VMware Best Practices)" -ForegroundColor Green
-    Write-Host
-    Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan VM Configurations (George Extras)" -ForegroundColor Green
     Write-Host
     Write-Host "[A] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Add Appliance IP to SSH Firewall" -ForegroundColor Green
@@ -4539,6 +4536,8 @@ Function fn_MainMenu {
         fn_PressAnyKey
         fn_MainMenu
         }
+
+
 
         A {
           Clear-Host
