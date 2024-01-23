@@ -139,7 +139,7 @@ Function fn_nsxscanner {
   $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline'
-  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml --show-progress --reporter=cli json:$jsonOutput"
+  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml --show-progress --reporter=cli json:$jsonOutput"
   Invoke-Expression $command
   Write-Host "NSX Global Manager Scan Complete!"
 }
