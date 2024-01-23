@@ -98,7 +98,7 @@ Function fn_sddcscanner {
   $jsonOutput = "/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-  $command = "inspec exec $profilePath -t ssh://'$global:SDDCuser'@'$global:SDDCmgr' --password '$global:SDDCpass' --input-file='$profilePath/inputs-vcf-sddc-mgr-4x.yml' --show-progress --reporter=cli json:.$jsonOutput"
+  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inputs-vcf-sddc-mgr-4x.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
   Invoke-Expression $command
   Write-Host "VCF Scan Complete!"
   }
