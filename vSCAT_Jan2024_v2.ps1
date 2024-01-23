@@ -61,8 +61,8 @@ VMware Cloud Foundations (vCF):
 	- root account credentials for SSH operations
 	- SDDC Manager SSO Administrtor Account Credentials (administrator@vsphere.local)
 
-NSX-T:
-	- IP Address or FQDN of NSX-T Manager
+NSX Global Manager:
+	- VIP Address or FQDN of NSX Global Manager
 	- SSH enabled on NSX Managers
 	- root account credentials for SSH operations
 	- admin account credentials for API operations
@@ -139,7 +139,7 @@ Function fn_nsxscanner {
   $jsonOutput = "/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline'
-  $command ="inspec exec "+$profilePath+" --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password "+$global:NSXRootPass+" --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
   Invoke-Expression $command
   Write-Host "NSX Global Manager Scan Complete!"
 }
@@ -4030,9 +4030,9 @@ Function fn_RequestNSXToken {
   $command = "rm headers.txt"  
   Invoke-Expression $command
   Write-Host "Building YAML files..." -ForegroundColor Green
-  $command= 'mv /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.bak'
+  $command= 'mv ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.bak'
   Invoke-Expression $command
-  Add-Content  -Path /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inputs-nsxt-3.x.yml -Value "
+  Add-Content  -Path ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml -Value "
   # General
   nsxManager: '$global:NSXmgr'
   sessionToken: '$global:xxsrftoken'
@@ -4049,11 +4049,11 @@ Function fn_RequestNSXToken {
   t0dhcplist: []
   t1dhcplist: []
   t1multicastlist: [] "
-  $command= 'mv /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.yml /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.bak'
+  $command= 'mv ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.bak'
   Invoke-Expression $command
-  Add-Content  -Path /root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline-master/inspec.yml -Value "
-  name: vmware-nsxt-3.0-stig-inspec-baseline
-  title: VMware NSX-T STIG InSpec Profile
+  Add-Content  -Path ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml -Value "
+  name: vmware-nsx-4.0-stig-inspec-baseline
+  title: VMware NSX GM STIG InSpec Profile
   maintainer: The Authors
   copyright: The Authors
   copyright_email: stigs@vmware.com
@@ -4065,7 +4065,7 @@ Function fn_RequestNSXToken {
   - name: nsxManager
     type: string
     value: '$global:NSXmgr'
-    description: 'IP or FQDN of NSX-T Manager'
+    description: 'VIP or FQDN of NSX GM Manager'
   # We use session based authentication in this profile to avoid username/pass   See https://developer.vmware.com/apis/1248/nsx-t on how to generate the session token and you will also need the JSESSIONID cookie
   - name: sessionToken
     type: string
@@ -4082,23 +4082,23 @@ Function fn_RequestNSXToken {
     value: ['loginsight.vmware.com','log.test.local']
     description: 'TNDM-3X-000034 enter array of valid syslog servers'
 
-  depends:
+    depends:
     - name: dfw
       path: dfw
     - name: manager
       path: manager
-    - name: sdn
-      path: sdn
+    - name: sdc
+      path: sdc
     - name: t0fw
       path: t0fw
-    - name: t0router
-      path: t0router
+    - name: t0rtr
+      path: t0rtr
     - name: t1fw
       path: t1fw
-    - name: t1router
-      path: t1router"
+    - name: t1rtr
+      path: t1rtr"
 
-  Write-Host "NSX-T YAML Files Updated."
+  Write-Host "NSX GM YAML Files Updated."
   fn_PressAnyKey
 }
 
@@ -4131,7 +4131,7 @@ Function fn_getNSXCreds {
     Write-Host "Testing ability to find $global:NSXmgr..."
     if (!(Test-Connection -ComputerName $global:NSXmgr -Quiet -Count 2)) {
       Write-Host "Unable to find $global:NSXmgr " -ForegroundColor Red
-      Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+      Write-Host "Verify correct FQDN, DNS, and VIP Configuration and try again." -ForegroundColor Red
       Write-host
       fn_PressAnyKey
       fn_getNSXCreds
@@ -4139,10 +4139,10 @@ Function fn_getNSXCreds {
     Write-Host "Connectivity to $global:NSXmgr verified." -ForegroundColor Green
     Write-Host
   } else {
-    Write-Host "You are currently connected to NSX Manager" -ForegroundColor Green -NoNewline
+    Write-Host "You are currently connected to NSX GM Manager" -ForegroundColor Green -NoNewline
     Write-Host $global:NSXmgr -ForegroundColor Yellow
     Write-Host
-    $ChangeNSXMgr = Read-Host "Change NSX Manager (Y/N)?" -NoNewline
+    $ChangeNSXMgr = Read-Host "Change NSX Global Manager (Y/N)?" -NoNewline
     
     if ($ChangeNSXMgr -eq 'Y') {
       $global:NSXmgr = ''
