@@ -4946,12 +4946,16 @@ Function fn_Build_VM_CSV {
    Write-Host "Filtering must have a * wildcard at the front or back (or both) to match multiple VMs" -ForegroundColor Green
    Write-Host "Enter Optional Hostname Filter  " -ForegroundColor Yellow -NoNewLine
    $global:filter = Read-Host
-   
+
   # Build first Column of report
 
   $FirstColumn = @('VMware ID', 'Priority', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
 
   $global:allVM = Get-VM | Sort-Object | Where-Object {$_.Name -notlike "vCLS-*"}
+
+  if ($global:filter) {
+    $global:allVM = Get-VM | Sort-Object | Where-Object {$_.Name -like $global:filter}
+ }
 
   $FirstColumn += $global:allVM
 
