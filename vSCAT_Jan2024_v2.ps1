@@ -4919,7 +4919,6 @@ Function fn_Build_VM_CSV {
   $global:csvFile = "./results/$($defaultVIServer) - $($date) - VM Scan.csv"
 
    # Derrill added this
-
    Write-Host "You can filter the names of the VMs being tested" -ForegroundColor Green
    Write-Host "Enter the search string to filter or just press Enter to not filter" -ForegroundColor Green
    Write-Host "Filtering must have a * wildcard at the front or back (or both) to match multiple VMs" -ForegroundColor Green
@@ -4927,7 +4926,6 @@ Function fn_Build_VM_CSV {
    $global:filter = Read-Host
 
   # Build first Column of report
-
   $FirstColumn = @('VMware ID', 'Priority', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
 
   $global:allVM = Get-VM | Sort-Object | Where-Object {$_.Name -notlike "vCLS-*"}
