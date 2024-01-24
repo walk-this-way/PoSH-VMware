@@ -14,7 +14,7 @@ Function fn_DisableSSHandShell {
 
 	#enable bash shell
 	foreach($hosts in $host_list){
-		Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
+		Write-Host -ForegroundColor GREEN "Stopping shell service on " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"
 		Get-VMHostService -VMHost $hosts | Where-Object {($_.Key -eq "TSM") -and ($_.Running -eq $True)} | Stop-VMHostService -confirm:$false
 	}
