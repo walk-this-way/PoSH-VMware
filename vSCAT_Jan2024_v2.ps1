@@ -3845,7 +3845,7 @@ Function VMCH-70-000007 {
   $global:NISTcit='CM-6 b'
   $global:finding='If the virtual machine advanced setting "isolation.tools.hgfsServerSet.disable" does not exist or is not set to "true", this is a finding.'
   $global:xResult='"isolation.tools.hgfsServerSet.disable" value set to "true"'
-  $global:command= 'Get-VM -Name $VM | New-AdvancedSetting -Name isolation.tools.hgfsServerSet.disable'
+  $global:command= 'Get-VM -Name $VM | Get-AdvancedSetting isolation.tools.hgfsServerSet.disable'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -3874,7 +3874,7 @@ Function VMCH-70-000013 {
   $global:NISTcit='CM-6 b'
   $global:finding='If the virtual machine advanced setting "RemoteDisplay.maxConnections" does not exist or is not set to "1", this is a finding.'
   $global:xResult='Find the "RemoteDisplay.maxConnections" value and set it to "1"'
-  $global:command= 'Get-VM -Name $VM | New-AdvancedSetting -Name RemoteDisplay.maxConnections'
+  $global:command= 'Get-VM -Name $VM | Get-AdvancedSetting RemoteDisplay.maxConnections'
   fn_Print_VM_Control_Info
 
 if($global:allVM )
