@@ -4704,12 +4704,7 @@ Function fn_Load_vCenter_Controls {
     'NIST800-53-VI-VC-CFG-01209',
     'NIST800-53-VI-VC-CFG-01210',
     'NIST800-53-VI-VC-CFG-01211',
-    'NIST800-53-VI-VC-CFG-01212', 
-    'VMCH-70-000007',
-    'VMCH-70-000013',
-    'VMCH-70-000020',
-    'VMCH-70-000021',
-    'VMCH-70-000025'
+    'NIST800-53-VI-VC-CFG-01212'  
   
   )
 }
@@ -4820,8 +4815,13 @@ Function fn_Load_VM_Controls {
     'NIST800-53-VI-VC-CFG-XX109',
     'NIST800-53-VI-VC-CFG-00154',
     'NIST800-53-VI-VC-CFG-X0415', 
-    'VMCH-80-000201',
-    'VMCH-67-000014'
+    'VMCH-80-000201',    
+    'VMCH-70-000007',
+    'VMCH-70-000013',
+    'VMCH-67-000014',
+    'VMCH-70-000020',
+    'VMCH-70-000021',
+    'VMCH-70-000025',
   )
 }
 
