@@ -4901,7 +4901,6 @@ Function fn_Build_ESX_CSV {
   $global:csvFile = "./results/$($defaultVIServer) - $($date) - ESX Scan.csv"
 
   # Build first Column of report
-
   $allHosts = Get-VMHost | Sort-Object 
 
   $FirstColumn = @('VMware ID', 'Nist Citation', 'Description', 'Finding', 'Expected Result',' ') # Meta-Data Headers
