@@ -4821,7 +4821,7 @@ Function fn_Load_VM_Controls {
     'VMCH-67-000014',
     'VMCH-70-000020',
     'VMCH-70-000021',
-    'VMCH-70-000025',
+    'VMCH-70-000025'
   )
 }
 
