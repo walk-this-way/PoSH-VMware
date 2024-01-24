@@ -3903,6 +3903,7 @@ Function VMCH-70-000020 {
   $global:NISTcit='CM-6 b'
   $global:finding='Ask the system administrator if hardened, patched templates are used for VM creation and properly configured operating system deployments, including applications dependent and nondependent on VM-specific configurations.'
   $global:xResult='This check is a manual or policy based check'
+  $global:command= 'Write Host = "manual check"'
   fn_Print_VM_Control_Info
 
 if($global:allVM )
@@ -3931,6 +3932,7 @@ Function VMCH-70-000021 {
   $global:NISTcit='CM-6 b'
   $global:finding='If a VM console is used to perform VM management tasks other than for troubleshooting VM issues, this is a finding. If SSH and/or terminal management services are exclusively used to perform management tasks, this is not a finding.'
   $global:xResult='This check is a manual or policy based check'
+  $global:command= 'Write Host = "manual check"'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
