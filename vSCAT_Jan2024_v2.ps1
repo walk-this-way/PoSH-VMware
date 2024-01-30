@@ -173,9 +173,14 @@ Function fn_SSH_ON {
   $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Start-VMHostService -Confirm:$false | Out-Null
 }
 
-Function fn_SSH_OFF {
+Function fn_SSH_ALL_OFF {
 # Turn ESX Host SSH Service OFF
-  $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
+#Derrill 
+  Write-Host "Disable SSH on all hosts? y or n" -ForegroundColor Green
+  $ssh_off = Read-Host
+  if($ssh_off -eq 'y'){
+    Get-Host | Get-VMHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
+  }
 }
 
 Function fn_SSH_Firewall_AddIP {
@@ -3903,7 +3908,7 @@ Function VMCH-70-000020 {
   $global:NISTcit='CM-6 b'
   $global:finding='Ask the system administrator if hardened, patched templates are used for VM creation and properly configured operating system deployments, including applications dependent and nondependent on VM-specific configurations.'
   $global:xResult='This check is a manual or policy based check'
-  $global:command= 'Write Host = "manual check"'
+  $global:command= 'Write-Host = "manual check"'
   fn_Print_VM_Control_Info
 
 if($global:allVM )
@@ -3932,7 +3937,7 @@ Function VMCH-70-000021 {
   $global:NISTcit='CM-6 b'
   $global:finding='If a VM console is used to perform VM management tasks other than for troubleshooting VM issues, this is a finding. If SSH and/or terminal management services are exclusively used to perform management tasks, this is not a finding.'
   $global:xResult='This check is a manual or policy based check'
-  $global:command= 'Write Host = "manual check"'
+  $global:command= 'Write-Host = "manual check"'
   fn_Print_VM_Control_Info
 
   if($global:allVM )
@@ -4679,6 +4684,7 @@ Function fn_PressAnyKey {
 }
 
 Function fn_Quit  {
+    fn_SSH_ALL_OFF
     Disconnect-VIServer -Server * -Force -Confirm:$false
     Write-Host "Finished"
     exit
@@ -4800,7 +4806,7 @@ Function fn_Load_VM_Controls {
     'NIST800-53-VI-VC-CFG-00073',
     'NIST800-53-VI-VC-CFG-00074',
     'NIST800-53-VI-VC-CFG-00075',
-    'NIST800-53-VI-VC-CFG-00096',
+   # 'NIST800-53-VI-VC-CFG-00096', no defined function
     'NIST800-53-VI-VC-CFG-00097',
     'NIST800-53-VI-VC-CFG-00099',
     'NIST800-53-VI-VC-CFG-00101',
