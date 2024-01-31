@@ -1,6 +1,7 @@
 <#
 Version Notes
 Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans)
+Derrill staging test
 #>
 
 # Set / Clear all variables 
