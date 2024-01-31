@@ -1,6 +1,6 @@
 <#
 Version Notes
-Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans) ** Derrill's changes
+Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans)
 #>
 
 # Set / Clear all variables 
