@@ -129,7 +129,7 @@ Function fn_sddcscanner {
     Write-Host "ESX Scan Complete!"
   }
 
-Function fn_VMscannerOLD { 
+<#Function fn_VMscannerOLD { 
     Write-Host "Running VM Host Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
@@ -142,7 +142,7 @@ Function fn_VMscannerOLD {
     Invoke-Expression $command
     Write-Host "VM Scan Complete!"
   }
-
+#>
   Function fn_VMscanner { 
     Write-Host "Running ESX Host Scan:"
       $env:VISERVER=$global:defaultVIServer
@@ -4678,7 +4678,7 @@ Function fn_STIGMenu {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
-        fn_filter_VMs
+        #fn_filter_VMs
         fn_VMscanner
         fn_PressAnyKey
         fn_STIGMenu
