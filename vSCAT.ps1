@@ -129,7 +129,7 @@ Function fn_sddcscanner {
     Write-Host "ESX Scan Complete!"
   }
 
-Function fn_VMscanner { 
+Function fn_VMscannerOLD { 
     Write-Host "Running VM Host Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
@@ -141,6 +141,20 @@ Function fn_VMscanner {
     $command = "inspec exec "+ $profilePath +" --show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+" --input-file "+ $profilePath+"inspec.yml --reporter=cli json:"+$jsonOutput     
     Invoke-Expression $command
     Write-Host "VM Scan Complete!"
+  }
+
+  Function fn_VMscanner { 
+    Write-Host "Running ESX Host Scan:"
+      $env:VISERVER=$global:defaultVIServer
+      $env:VISERVER_USERNAME=$global:VCuser
+      $env:VISERVER_PASSWORD=$global:VCpass
+      $env:NO_COLOR=$true
+    $jsonOutput = "/results/ESX_Scan_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+    Invoke-Expression $command
+    Write-Host "ESX Scan Complete!"
   }
 
 Function fn_nsxscanner { 
