@@ -112,7 +112,7 @@ Function fn_sddcscanner {
   }
 
   Function fn_ESXiscanner { 
-    Write-Host "Running ESX Host Scan:"
+    Write-Host "Running ESXi Host Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
@@ -130,7 +130,7 @@ Function fn_sddcscanner {
     fn_PressAnyKey
     
     Invoke-Expression $command
-    Write-Host "ESX Scan Complete!"
+    Write-Host "ESXi Host Scan Complete!"
   }
 
 <#Function fn_VMscannerOLD { 
@@ -4628,7 +4628,7 @@ Function fn_STIGMenu {
     Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan ESXi" -ForegroundColor Green
+    Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
@@ -9605,7 +9605,7 @@ Function fn_STIGMenu {
     Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan ESXi" -ForegroundColor Green
+    Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
@@ -9648,7 +9648,7 @@ Function fn_STIGMenu {
 
       4 {
         Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        #if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
         fn_ESXiscanner
         fn_PressAnyKey
