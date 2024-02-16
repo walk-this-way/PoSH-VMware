@@ -124,9 +124,10 @@ Function fn_sddcscanner {
     <#$command ="inspec exec "+$profilePath+ " --show-progress -t ssh://"+$global:VCuser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+"--input-file"+ $profilePath+"inspec.yml --show-progress --reporter=cli json:"+$jsonOutput  
     #>
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput" 
+   
     Write-Host "The command I'm sending is "
     Write-Host $command
-    Function fn_PressAnyKey
+    fn_PressAnyKey
     
     Invoke-Expression $command
     Write-Host "ESX Scan Complete!"
