@@ -202,7 +202,7 @@ Function fn_SSH_ALL_OFF {
   Write-Host "Disable SSH on all hosts? y or n" -ForegroundColor Green
   $ssh_off = Read-Host
   if($ssh_off -eq 'y'){
-    Get-Host | Get-VMHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
+    Get-VMHost | Get-VMHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
   }
 }
 
@@ -5179,7 +5179,7 @@ Function fn_SSH_ALL_OFF {
   Write-Host "Disable SSH on all hosts? y or n" -ForegroundColor Green
   $ssh_off = Read-Host
   if($ssh_off -eq 'y'){
-    Get-Host | Get-VMHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
+    Get-VMHost | Get-VMHostService | Where-Object {$_.key -eq "TSM-SSH"} | Stop-VMHostService -Confirm:$false | Out-Null
   }
 }
 
