@@ -134,7 +134,7 @@ Function fn_sddcscanner {
   }
 
   Function fn_vSphereScanner { 
-    Write-Host "Running ESX Host Scan:"
+    Write-Host "Running vSphere (vCenter, ESXi Host, and Virtual Machine) Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
@@ -9617,7 +9617,6 @@ Function fn_STIGMenu {
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
-    Write-Host
     Write-Host "[Q] " -ForegroundColor Red -NoNewLine
     Write-Host "QUIT  " -ForegroundColor Red
     Write-Host
@@ -9668,10 +9667,11 @@ Function fn_STIGMenu {
         fn_PressAnyKey
         fn_STIGMenu
       }  
-      
+
      6 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_GetESXCreds
         fn_vSphereScanner
         fn_PressAnyKey
         fn_STIGMenu
