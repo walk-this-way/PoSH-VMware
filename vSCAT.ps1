@@ -119,11 +119,11 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
       $jsonOutput = "/root/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
   
     <#$command ="inspec exec "+$profilePath+ " --show-progress -t ssh://"+$global:VCuser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+"--input-file"+ $profilePath+"inspec.yml --show-progress --reporter=cli json:"+$jsonOutput  
     #>
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput" 
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
    
     Write-Host "The command I'm sending is "
     Write-Host $command
@@ -133,32 +133,33 @@ Function fn_sddcscanner {
     Write-Host "ESXi Host Scan Complete!"
   }
 
-<#Function fn_VMscannerOLD { 
-    Write-Host "Running VM Host Scan:"
+  Function fn_vSphereScanner { 
+    Write-Host "Running ESX Host Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/VM_"+$global:defaultVIServer+"_"+$global:date+".json"
+    $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm/"
-    $command = "inspec exec "+ $profilePath +" --show-progress -t ssh://"+$global:VCUser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+" --input-file "+ $profilePath+"inspec.yml --reporter=cli json:"+$jsonOutput     
+    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
     Invoke-Expression $command
-    Write-Host "VM Scan Complete!"
+    Write-Host "vSphere Scan Complete!"
   }
-#>
+
+
   Function fn_VMscanner { 
     Write-Host "Running ESX Host Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/results/ESX_Scan_"+$global:date+".json"
+    $jsonOutput = "/root/results/Virtual Machine_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
     Invoke-Expression $command
-    Write-Host "ESX Scan Complete!"
+    Write-Host "Virtual Machine Scan Complete!"
   }
 
 Function fn_nsxscanner { 
@@ -9610,6 +9611,9 @@ Function fn_STIGMenu {
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
     Write-Host
+    Write-Host "6" -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan vSphere Environment" -ForegroundColor Green
+    Write-Host
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
@@ -9664,7 +9668,14 @@ Function fn_STIGMenu {
         fn_PressAnyKey
         fn_STIGMenu
       }  
-     
+     6 {
+        Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_vSphereScanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }
+  
       X {
         Clear-Host
         fn_MainMenu
