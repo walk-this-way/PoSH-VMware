@@ -9611,7 +9611,7 @@ Function fn_STIGMenu {
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
     Write-Host
-    Write-Host "6" -ForegroundColor Yellow -NoNewLine
+    Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vSphere Environment" -ForegroundColor Green
     Write-Host
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
@@ -9668,6 +9668,7 @@ Function fn_STIGMenu {
         fn_PressAnyKey
         fn_STIGMenu
       }  
+      
      6 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
