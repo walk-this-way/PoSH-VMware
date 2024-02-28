@@ -143,6 +143,10 @@ Function fn_sddcscanner {
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+    Write-Host "The command I'm sending is "
+    Write-Host $command
+    fn_PressAnyKey  
+
     Invoke-Expression $command
     Write-Host "vSphere Scan Complete!"
   }
@@ -9609,7 +9613,7 @@ Function fn_STIGMenu {
     Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan Virtual Machines" -ForegroundColor Green
+    Write-Host "Scan Virtual Machines (all VMs or selected VMs)" -ForegroundColor Green
     Write-Host
     Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vSphere Environment" -ForegroundColor Green
