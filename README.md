@@ -20,13 +20,14 @@ Pending creation
 This script runs successfully on VSCAT_230705.ova (PhotonOS with required dependencies)
 
 ## Support
-There is no official support for this code. Please reach out to authors if you need assistance.
+There is no official support for this code. Please reach out to the authors if you need assistance.
 
 ## Roadmap
-Fix deployment script, have vSCAT.ps1 start on boot instead of shell access
+Fix the deployment script, have vSCAT.ps1 start on boot instead of shell access
 
 ## Contributing
-If you would like to contribute to this product, please reach out directly to the authors below. <b> PLEASE DO NOT MERGE TO DIRECTLY TRUNK</b>
+If you would like to contribute to this product, please reach out directly to the authors below. 
+<b> PLEASE DO NOT MERGE TO DIRECTLY TRUNK</b>
 
 ## Authors and acknowledgment
 teri.walker@broadcom.com
@@ -34,7 +35,7 @@ teri.walker@broadcom.com
 kevin.stiegler@broadcom.com
 
 ## License
-This script is used for the PSO Security Assessments of VCF, NSX, VCenter, and ESXi components. Not intended for commerical use or distribution. 
+This script is used for the PSO Security Assessments of VCF and vSphere components. Not intended for commercial use or distribution. 
 
 ## Project status
 
