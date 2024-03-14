@@ -2,7 +2,7 @@
 HealthCare VCF security assessment script
 
 ## Description
-This code checks envirnoment variables against DISA STIG, NIST 800-53 standards, and vmware best practices to determine security posture of associated VMware components. 
+This code checks environment variables against DISA STIG, NIST 800-53 standards, and vmware best practices to determine security posture of associated components. 
 
 ## Feature Backlog
 - [ ] connect to new vcenter without dumping script
