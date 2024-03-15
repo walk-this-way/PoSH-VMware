@@ -4638,6 +4638,9 @@ Function fn_STIGMenu {
     Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
     Write-Host
+    Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan vSphere Envirnoment" -ForegroundColor Green
+    Write-Host
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
