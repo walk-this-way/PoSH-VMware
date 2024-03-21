@@ -11,16 +11,16 @@ Domain=
 #>
 Function fn_getInfo {
   $global:IP = Read-Host "IP Address"
-  $global:CIDR = Read-Host "CIRD Mask (ie '24')"  
-  $global:Gateway = Read-Host "Gateway"
-  $global:DNS = Read-Host "DNS"
+  $global:CIDR = Read-Host "CIDR Mask (ie '24')"  
+  $global:Gateway = Read-Host "Gateway IP Address"
+  $global:DNS = Read-Host "DNS IP Address"
   $global:Domain = Read-Host "Domain Suffix"
 }
 Function fn_BuildNetFile {  
     $global:file = '/etc/systemd/network/10-static-en.network'
     if ((Test-Path -Path $global:file -PathType Leaf)) {
-      Write-Host "Networkfile Exists."
-      Write-Host "Moving File to BAK"
+      Write-Host "Network file exists."
+      Write-Host "Moving file to BAK"
       $command = 'mv /etc/systemd/network/10-static-en.network /etc/systemd/network/10-static-en.bak'
       Invoke-Expression $command
       Write-Host "File moved"
@@ -36,7 +36,7 @@ Function fn_BuildNetFile {
 }
 
 Function fn_restartServices {
-  $command = "chown systemd-network:systemd-network $global:file"
+  $command = "chmod o+r systemd-network:systemd-network $global:file"
   Write-Host "Set chown"
   Invoke-Expression $command
   $command = "systemctl restart systemd-networkd"
