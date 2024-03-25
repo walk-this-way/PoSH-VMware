@@ -4541,7 +4541,8 @@ Function fn_MainMenu {
 
       1 {
           Clear-Host
-          fn_GetvCenterCreds
+          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+          #fn_GetvCenterCreds
           fn_Build_vCenter_CSV
           fn_Load_vCenter_Controls
           fn_RunScan
@@ -4552,7 +4553,7 @@ Function fn_MainMenu {
       2 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_GetvCenterCreds
+        #fn_GetvCenterCreds
         fn_GetESXCreds
         fn_Build_ESX_CSV
         fn_Load_ESX_Controls

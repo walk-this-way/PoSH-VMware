@@ -36,6 +36,7 @@ Function fn_BuildNetFile {
 }
 
 Function fn_restartServices {
+  #$command = "chown systemd-network:systemd-network $global:file" # This is not needed
   $command = "chmod o+r systemd-network:systemd-network $global:file"
   Write-Host "Set chown"
   Invoke-Expression $command
