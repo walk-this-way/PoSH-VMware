@@ -1,14 +1,4 @@
-<#
-[Match]
-Name=e*
 
-[Network]
-Address=10.0.0.95/24
-Gateway=10.0.0.250
-DNS=10.0.0.250
-Domain=
-
-#>
 Function fn_getInfo {
   $global:IP = Read-Host "IP Address"
   $global:CIDR = Read-Host "CIDR Mask (ie '24')"  
@@ -36,14 +26,13 @@ Function fn_BuildNetFile {
 }
 
 Function fn_restartServices {
-  #$command = "chown systemd-network:systemd-network $global:file" # This is not needed
   $command = "chmod o+r systemd-network:systemd-network $global:file"
   Write-Host "Set chown"
   Invoke-Expression $command
   $command = "systemctl restart systemd-networkd"
   Invoke-Expression $command
   Write-Host "Restarted Network Service"
-  $comand = "systemctl start sshd"
+  $command = "systemctl start sshd"
   Invoke-Expression $command
   Write-Host "SSH Service Started"
 }

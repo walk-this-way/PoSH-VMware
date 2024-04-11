@@ -4463,10 +4463,10 @@ Write-Host "Enter ESX SSH Credentials"
   #>
     Write-Host "ESX Host Information:" -ForegroundColor Green
     Write-Host
-    Write-Host "This process requires SSH ROOT access to the ESX Hosts, all Hosts must have the same root password " -ForegroundColor Green -NoNewLine
+    Write-Host "This process requires SSH ROOT access to the ESX Hosts, all Hosts must have the same root password or the domain account must have Administrator priviledges " -ForegroundColor Green -NoNewLine
     Write-Host "!!" -ForegroundColor Red
     Write-Host
-    Write-Host "Enter the root Credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
+    Write-Host "Enter the root or domain admin credentials for the ESX Hosts" -ForegroundColor Green -NoNewLine
     $global:ESXSSHCreds = Get-Credential
     $global:ESXSSHuser= $global:ESXSSHCreds.UserName.ToString()
     $global:ESXSSHpass = $global:ESXSSHCreds.GetNetworkCredential().password
@@ -4564,15 +4564,13 @@ Function fn_MainMenu {
       3 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_GetvCenterCreds
+        #fn_GetvCenterCreds
         fn_Build_VM_CSV
         fn_Load_VM_Controls
         fn_RunScan
         fn_PressAnyKey
         fn_MainMenu
         }
-
-
 
         A {
           Clear-Host
@@ -4690,8 +4688,8 @@ Function fn_STIGMenu {
       5 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_GetESXCreds
-        #fn_filter_VMs
+        #fn_GetESXCreds
+        fn_filter_VMs
         fn_VMscanner
         fn_PressAnyKey
         fn_STIGMenu
