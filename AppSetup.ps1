@@ -27,7 +27,7 @@ Function fn_BuildNetFile {
 
 Function fn_restartServices {
   $command = "chmod o+r systemd-network:systemd-network $global:file"
-  Write-Host "Set chown"
+  Write-Host "Set permissions on network config file"
   Invoke-Expression $command
   $command = "systemctl restart systemd-networkd"
   Invoke-Expression $command
