@@ -4523,7 +4523,6 @@ Function fn_MainMenu {
       1 {
           Clear-Host
           if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-          #fn_GetvCenterCreds
           fn_Build_vCenter_CSV
           fn_Load_vCenter_Controls
           fn_RunScan
@@ -4534,7 +4533,6 @@ Function fn_MainMenu {
       2 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        #fn_GetvCenterCreds
         fn_GetESXCreds
         fn_Build_ESX_CSV
         fn_Load_ESX_Controls
@@ -4545,7 +4543,6 @@ Function fn_MainMenu {
       3 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        #fn_GetvCenterCreds
         fn_Build_VM_CSV
         fn_Load_VM_Controls
         fn_RunScan
@@ -4651,11 +4648,11 @@ Function fn_STIGMenu {
         }  
       
       3 {
-        Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_vCscanner
-        fn_PressAnyKey
-        fn_STIGMenu
+         Clear-Host
+         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+         fn_vCscanner
+         fn_PressAnyKey
+         fn_STIGMenu
       }  
 
       4 {
@@ -4668,27 +4665,27 @@ Function fn_STIGMenu {
       }  
 
       5 {
-        Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_filter_VMs
-        fn_VMscanner
-        fn_PressAnyKey
-        fn_STIGMenu
+         Clear-Host
+         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+         fn_filter_VMs
+         fn_VMscanner
+         fn_PressAnyKey
+         fn_STIGMenu
       }  
 
       6 {
-        Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        fn_GetESXCreds
-        fn_vSphereScanner
-        fn_PressAnyKey
-        fn_STIGMenu
+         Clear-Host
+         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+         fn_GetESXCreds
+         fn_vSphereScanner
+         fn_PressAnyKey
+         fn_STIGMenu
             
       }
      
       X {
-        Clear-Host
-        fn_MainMenu
+         Clear-Host
+         fn_MainMenu
       }  
 
       Q {
