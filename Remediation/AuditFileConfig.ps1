@@ -11,15 +11,19 @@ Function fn_ConfigureAuditLogs {
 
     Write-Host "This is a remediation for ESXI-70-000084, the ESXi Host must enable audit logging" 
 
-    Write-Host -ForegroundColor RED "ESXi offers both local and remote audit recordkeeping 
+    Write-Host -ForegroundColor Green "ESXi offers both local and remote audit recordkeeping 
     to meet the requirements of the NIAP Virtualization Protection Profile 
     and Server Virtualization Extended Package. Local records are stored on any accessible local or VMFS path. 
     Remote records are sent to the global syslog servers configured elsewhere.
     To operate in the NIAP validated state, ESXi must enable and properly configure this audit system. 
+
+    Optional: Set the audit log location to persistent storage. 
+    This is set to /scratch/auditLog by default and does not normally need to be changed.
+
     This system is disabled by default."
     Write-Host -ForegroundColor DarkYellow "Note: Audit records can be viewed locally via the /bin/auditLogReader utility over SSH or at the ESXi shell."
     Write-Host
-    Write-Host -ForegroundColor Green "This modification does not require a reboot of the ESXi host."
+    Write-Host -ForegroundColor DarkYellow "This modification does not require a reboot of the ESXi host."
     Write-Host 
 
 
@@ -68,12 +72,13 @@ Function fn_ConfigureAuditLogs {
 		Disconnect-VIServer -Confirm:$false
 		exit
 	}
+    Write-Host
+    Write-Host "The following ESXi hosts are in the cluster $Location : "   
+    Write-Host $VMHosts -Separator "`n" 
 
-    Write-Host "The following ESXi hosts are in the cluster $Location : "
-    Write-Host $VMHosts 
-
-    
+    Write-Host
     Write-Host "You can filter the names of the Hosted being remediated" -ForegroundColor Green
+    Write-Host
     Write-Host "Enter the search string to filter or just press Enter to not filter" -ForegroundColor Green
     Write-Host "Filtering must have a * wildcard at the front or back (or both) to match multiple Hosts" -ForegroundColor Green
     Write-Host 
