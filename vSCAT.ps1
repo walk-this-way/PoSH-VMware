@@ -4313,8 +4313,6 @@ Function fn_GetSddcCreds {
 }
 
 Function fn_GetvCenterCreds {
-# Clear-Host
-
 # If connected to a vCenter give option to switch. 
   if ($global:defaultVIServer -ne "Not Connected") {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
@@ -4440,27 +4438,10 @@ Function fn_GetvCenterCreds {
 }
 
 Function fn_GetESXCreds {
-# Clear-Host
+Clear-Host
 # Determine if ESX Credentials are Valid
 
 Write-Host "Enter ESX SSH Credentials"
-<#  if ($global:ESXSSHuser -ne 'blank') { 
-    Write-Host "Currently using: " -ForegroundColor Green -NoNewline
-    Write-Host $global:ESXSSHuser -ForegroundColor Yellow 
-    $passlength = ($global:ESXSSHpass.Length)-4
-    $obs_SSHPass = $global:ESXSSHpass.substring(0,2) 
-    For ($i = 0; $i -lt $passlength; $i++) {
-          $obs_SSHPass += "*"
-        }
-    $obs_SSHPass = $obs_SSHPass.Substring($passlength,-2)
-    Write-Host "With password: "$obs_SSHPass ForegroundColor Yellow -NoNewline
-    Write-Host
-    $ChangeESXCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
-    if ($ChangeESXCreds -eq 'N') {
-      $global:ESXSSHCreds = 'blank'
-      fn_GetESXCreds
-    } else {
-  #>
     Write-Host "ESX Host Information:" -ForegroundColor Green
     Write-Host
     Write-Host "This process requires SSH ROOT access to the ESX Hosts, all Hosts must have the same root password or the domain account must have Administrator priviledges " -ForegroundColor Green -NoNewLine
@@ -4659,6 +4640,7 @@ Function fn_STIGMenu {
           fn_PressAnyKey
           fn_STIGMenu
         }
+
       2 {
           Clear-Host
           if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
@@ -4670,7 +4652,7 @@ Function fn_STIGMenu {
       
       3 {
         Clear-Host
-        fn_GetvCenterCreds
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_vCscanner
         fn_PressAnyKey
         fn_STIGMenu
@@ -4688,7 +4670,6 @@ Function fn_STIGMenu {
       5 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-        #fn_GetESXCreds
         fn_filter_VMs
         fn_VMscanner
         fn_PressAnyKey
@@ -4696,6 +4677,7 @@ Function fn_STIGMenu {
       }  
 
       6 {
+        Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
         fn_vSphereScanner
@@ -4709,7 +4691,7 @@ Function fn_STIGMenu {
         fn_MainMenu
       }  
 
-        Q {
+      Q {
           fn_Quit
         }
     }
