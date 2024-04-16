@@ -7,6 +7,12 @@
     - disconnect vCenter server
  #>
 
+ Function fn_PressAnyKey {
+    Write-Host "Press " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
+    Write-Host " to Continue..." -ForegroundColor Yellow -NoNewLine
+    Read-Host
+}
 Function fn_ConfigureAuditLogs {
 
     Write-Host "This is a remediation for ESXI-70-000084, the ESXi Host must enable audit logging" 
@@ -100,22 +106,28 @@ Function fn_ConfigureAuditLogs {
 
     
     # Set up the audit logs for each ESXi host in the location
-    $arguments.directory = Read-Host -Prompt "Define the audit log path"
+    $arguments.directory = Read-Host -Prompt "Define the audit log path" #error here
 
 	foreach ($VMHost in $VMHosts) {
 		Write-Host "Setting up the audit logs for $VMHost"
 		$esxcli = Get-EsxCli -VMHost $VMHost -v2
 		$arguments = $esxcli.system.auditrecords.local.set.CreateArgs()
-		$arguments.directory = $arguments.directory
+        Write-Host string($arguments.directory)
+        fn_PressAnyKey
+		$arguments.directory = $arguments.directory #this is throwing errors
 		$arguments.size="100"
 		$esxcli.system.auditrecords.local.set.Invoke($arguments)
 		$esxcli.system.auditrecords.local.enable.Invoke()
 		$esxcli.system.auditrecords.remote.enable.Invoke()
 	}
-
+    Write-Host
+    Write-Host
 	Write-Host "Audit logs have been set up for the ESXi hosts in the location $selectedHosts"
+    Write-Host
+    Write-Host
+    Write-Host "Disconnecting from the vCenter server..."
 
-    Disconnect-VIServer -Confirm:$true
+    Disconnect-VIServer -Confirm:$false
 }
 
 fn_ConfigureAuditLogs
