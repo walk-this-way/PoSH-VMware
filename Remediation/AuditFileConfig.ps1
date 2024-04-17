@@ -106,7 +106,7 @@ Function fn_ConfigureAuditLogs {
 
     
     # Set up the audit logs for each ESXi host in the location
-    $arguments.directory = Read-Host -Prompt "Define the audit log path" #error here
+    #$arguments.directory = Read-Host -Prompt "Define the audit log path" #error here
 
 	foreach ($VMHost in $VMHosts) {
 		Write-Host "Setting up the audit logs for $VMHost"
@@ -114,7 +114,7 @@ Function fn_ConfigureAuditLogs {
 		$arguments = $esxcli.system.auditrecords.local.set.CreateArgs()
         Write-Host string($arguments.directory)
         fn_PressAnyKey
-		$arguments.directory = $arguments.directory #this is throwing errors
+		#$arguments.directory = $arguments.directory #this is throwing errors
 		$arguments.size="100"
 		$esxcli.system.auditrecords.local.set.Invoke($arguments)
 		$esxcli.system.auditrecords.local.enable.Invoke()
