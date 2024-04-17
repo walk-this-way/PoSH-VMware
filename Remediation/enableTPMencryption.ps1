@@ -44,17 +44,33 @@ Write-Host "Setting up the audit logs for the following ESXi hosts:"
 $VMHosts | Select-Object Name
 
 #Check if the TPM encryption is already enabled
-foreach{
+foreach ($VMHost in $VMHosts){
     $vmhost = Get-VMHost -Name ; $esxcli = Get-EsxCli -VMHost $vmhost -V2; 
-$esxcli.system.settings.encryption.get.invoke() | Select-Object -ExpandProperty Mode 
-}
-$esxcli = Get-EsxCli -v2
-$esxcli.system.settings.encryption.get.invoke() | Select Mode
-
-
-
+    $esxcli.system.settings.encryption.get.invoke() | Select-Object -ExpandProperty Mode 
+    }   
 #Enable TPM encryption
 $esxcli = Get-EsxCli -v2
 $arguments = $esxcli.system.settings.encryption.set.CreateArgs()
 $arguments.mode = "TPM"
 $esxcli.system.settings.encryption.set.Invoke($arguments)
+
+# Evacuate the host and gracefully reboot for changes to take effect.
+Write-Host "Host needs to reboot for changes to take effect"
+Function fn_PressAnyKey {
+    Write-Host "Press " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
+    Write-Host " to Continue..." -ForegroundColor Yellow -NoNewLine
+    Read-Host
+}
+fn_PressAnyKey
+#Reboot the host
+foreach ($VMHost in $VMHosts){
+    Write-Host "Restarting the host $VMHost"
+    Restart-VMHost -VMHost $VMHost -Confirm:$false
+}
+
+Write-Host
+Write-Host
+Write-Host "TPM encryption has been enabled for the ESXi hosts in the location $selectedHosts"
+Write-Host
+Write-Host
