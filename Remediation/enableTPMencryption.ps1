@@ -69,6 +69,9 @@ foreach ($VMHost in $VMHosts){
     Restart-VMHost -VMHost $VMHost -Confirm:$false
 }
 
+#Disconnect from the vCenter server
+Disconnect-VIServer -Confirm:$false
+
 Write-Host
 Write-Host
 Write-Host "TPM encryption has been enabled for the ESXi hosts in the location $selectedHosts"
