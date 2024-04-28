@@ -60,16 +60,12 @@ Function fn_ConfigureAuditLogs {
         Write-Host "Complete"
         Disconnect-VIServer -Confirm:$false
     }
-    elseif ($vCenterVersion -eq "8") {
+    else {
         Get-VMHost | Get-AdvancedSetting -Name Config.HostAgent.log.level | Set-AdvancedSetting -Value "info"
         Write-Host "Complete"
         Disconnect-VIServer -Confirm:$false
     }
-    else {
-        Write-Host "This script is not supported on vCenter version $vCenterVersion, check audit log status."
-        Disconnect-VIServer -Confirm:$false
-        exit
-    }
+
     Write-Host
     Write-Host
 	Write-Host "Audit logs have been set up for the ESXi hosts in the location $selectedHosts"
