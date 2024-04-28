@@ -3,14 +3,14 @@
 This script enables TPM encryption on the ESXi host.
 #>
 Function fn_PressAnyKey {
-    Write-Host "Put Host into Maintenance Mode" -ForegroundColor White
+    Write-Host "Ensure you put the host into Maintenance Mode." -ForegroundColor White
     Write-Host "Press " -ForegroundColor Yellow -NoNewLine
     Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
     Write-Host " to Continue..." -ForegroundColor Yellow -NoNewLine
     Read-Host
 }
 Write-Host "This is a remediation for ESXI-70-000094, the ESXi Host must require TPM-based configuration encryption"
-
+Write-Host "You MUST get Secure Boot working prior to running this script" -ForegroundColor Red
 # Connect to the vCenter server
 $vcenter = Read-Host -Prompt "Enter vCenter you want to connect to"
 Connect-VIServer $vcenter 
@@ -18,9 +18,6 @@ Connect-VIServer $vcenter
 #Check vCenter version
 $vCenterVersion = (Get-View ServiceInstance).Content.About.Version
 Write-Host "Connected to vCenter $vcenter with version $vCenterVersion"
-
-
-$Location = Read-Host -Prompt "Enter the cluster of the ESXi hosts you want to configure audit logs for"
 
 $VMHosts = Get-VMHost -Location $Location
 if ($VMHosts.Count -eq 0) {
@@ -51,20 +48,16 @@ Write-Host
 $selectedHosts = $selectedHosts -replace '\*','.*'
 $VMHosts = $VMHosts | Where-Object { $_.Name -match $selectedHosts }
 
-Write-Host "Check to see if TPM module is "
-
-Write-Host "Checking if TPM is enabled for the following ESXi hosts:"
-$VMHosts | Select-Object Name
-
 #If the vCenter version is 6.7, do this
 if ($vCenterVersion -eq "6.7.0") {
-    Write-Host "This script is not supported on vCenter version 6.7.0"
-    #do stuff here
+    Write-Host "This script is not supported on vCenter version 6.7.0, check secure boot status."
+    Disconnect-VIServer -Confirm:$false
     exit
 }
 
-#If the vCenter version is greater than or equal to 7.0, do this
-if ($vCenterVersion -eq "7") {
+
+#If the vCenter version is 7.0, do this
+elseif ($vCenterVersion -eq "7.0.0") {
     #Check if the TPM encryption is already enabled
     foreach ($VMHost in $VMHosts){
     $vmhost = Get-VMHost -Name ; $esxcli = Get-EsxCli -VMHost $vmhost -V2; 
@@ -80,6 +73,7 @@ if ($vCenterVersion -eq "7") {
     Write-Host "Host needs to reboot for changes to take effect"
    
     fn_PressAnyKey  
+
     #Reboot the host
     foreach ($VMHost in $VMHosts){
         Write-Host "Restarting the host $VMHost"
@@ -89,8 +83,40 @@ if ($vCenterVersion -eq "7") {
     #Disconnect from the vCenter server
     Disconnect-VIServer -Confirm:$false
 }
-#Disconnect from the vCenter server
-Disconnect-VIServer -Confirm:$false
+
+#If the vCenter version is 8.0U1 or later, do this
+elseifif ($vCenterVersion -ge "8.0.1") {
+    #Check if the TPM encryption is already enabled
+    foreach ($VMHost in $VMHosts){
+    $vmhost = Get-VMHost -Name ; $esxcli = Get-EsxCli -VMHost $vmhost -V2; 
+    $esxcli.system.settings.encryption.get.invoke() | Select-Object -ExpandProperty Mode 
+        }   
+    #Enable TPM encryption
+    $esxcli = Get-EsxCli -v2
+    $arguments = $esxcli.system.settings.encryption.set.CreateArgs()
+    $arguments.mode = "TPM"
+    $esxcli.system.settings.encryption.set.Invoke($arguments)
+
+    # Evacuate the host and gracefully reboot for changes to take effect.
+    Write-Host "Host needs to reboot for changes to take effect"
+   
+    fn_PressAnyKey 
+
+    #Reboot the host
+    foreach ($VMHost in $VMHosts){
+        Write-Host "Restarting the host $VMHost"
+        Restart-VMHost -VMHost $VMHost -Confirm:$false
+    }
+
+    #Disconnect from the vCenter server
+    Disconnect-VIServer -Confirm:$false
+}
+#if vCenter connected, disconnect from the vCenter server
+else {
+    Write-Host "The vCenter version is not supported"
+    Disconnect-VIServer -Confirm:$false
+    exit
+}
 
 Write-Host
 Write-Host
