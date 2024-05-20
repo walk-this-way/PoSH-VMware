@@ -313,8 +313,8 @@ Function GET-vCENTER-BUILD {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-00415 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00415'
+Function VCSA-80-000095 {
+  $global:VMWConfig='VCSA-80-000095'
   $global:description='Verify Users and Roles'
   $global:NISTcit='AC-6'
   $global:finding='The vCenter Server users must have the correct roles assigned.'
@@ -328,8 +328,8 @@ Function NIST800-53-VI-VC-CFG-00415 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-00404 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00404'
+Function VCSA-80-000034 {
+  $global:VMWConfig='VCSA-80-000034'
   $global:description='The vCenter Server must produce audit records containing information to establish what type of events occurred.'
   $global:NISTcit='AU-3'
   $global:finding='If the log level is not set to info, this is a finding.'
@@ -343,8 +343,8 @@ Function NIST800-53-VI-VC-CFG-00404 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-00405 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00405'
+Function VCSA-80-000270 {
+  $global:VMWConfig='VCSA-80-000270'
   $global:description='The vCenter Server must set the distributed port group Promiscuous Mode policy to reject.'
   $global:NISTcit='AC-4'
   $global:finding='If the "Promiscuous Mode" policy is set to accept, this is a finding.'
@@ -387,8 +387,8 @@ Function NIST800-53-VI-VC-CFG-00405 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-00407 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00407'
+Function VCSA-80-000269 {
+  $global:VMWConfig='VCSA-80-000269'
   $global:description='The vCenter Server must set the distributed port group MAC Address Change policy to reject.'
   $global:NISTcit='AC-4'
   $global:finding='If the "MAC Address Changes" policy is set to accept, this is a finding.'
@@ -431,8 +431,8 @@ Function NIST800-53-VI-VC-CFG-00407 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-00417 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00417'
+Function VCSA-80-000271 {
+  $global:VMWConfig='VCSA-80-000271'
   $global:description='The vCenter Server must only send NetFlow traffic to authorized collectors.'
   $global:NISTcit='AC-4'
   $global:finding='The vCenter Server must only send NetFlow traffic to authorized collectors.'
@@ -475,8 +475,8 @@ Function NIST800-53-VI-VC-CFG-00417 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-00420 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00420'
+Function VCSA-80-000282 {
+  $global:VMWConfig='VCSA-80-000282'
   $global:description='The vCenter Server must configure the vSAN Datastore name to a unique name.'
   $global:NISTcit='CM-6b.'
   $global:finding='Name with "vsanDatastore"'
@@ -484,8 +484,8 @@ Function NIST800-53-VI-VC-CFG-00420 {
   $global:command='Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}'
   fn_Print_vCenter_Control_Info
   If($(Get-Cluster | Where-Object {$_.VsanEnabled} | Measure-Object).Count -gt 0){
-    $result = "vSAN Enabled Cluster found. See NIST800-53-VI-VC-CFG-00420.txt file."
-    (Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}) >> ./results/NIST800-53-VI-VC-CFG-00420.txt
+    $result = "vSAN Enabled Cluster found. See VCSA-80-000282.txt file."
+    (Get-Cluster | Where-Object {$_.VsanEnabled} | Get-Datastore | Where-Object {$_.type -match "vsan"}) >> ./results/VCSA-80-000282.txt
     }
     else { 
       $result = "vSAN is not enabled, this finding is not applicable" 
@@ -494,8 +494,8 @@ Function NIST800-53-VI-VC-CFG-00420 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-00450 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00450'
+Function VCSA-80-000268 {
+  $global:VMWConfig='VCSA-80-000268'
   $global:description='The vCenter Server must set the distributed port group Forged Transmits policy to reject.'
   $global:NISTcit='AC-4'
   $global:finding='If the "Forged Transmits" policy is set to accept, this is a finding.'
@@ -538,8 +538,8 @@ Function NIST800-53-VI-VC-CFG-00450 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-00428 { 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00428'
+Function VCSA-80-000275 { 
+  $global:VMWConfig='VCSA-80-000275'
   $global:description='The vCenter Server must configure the vpxuser auto-password to be changed periodically.'
   $global:NISTcit='IA-5f.'
   $global:finding='If the "VirtualCenter.VimPasswordExpirationInDays" is set to a value other than 30 days or does not exist, this is a finding.'
@@ -553,8 +553,8 @@ Function NIST800-53-VI-VC-CFG-00428 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-01200 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01200'
+Function VCSA-80-000267 {
+  $global:VMWConfig='VCSA-80-000267'
   $global:description='The vCenter Server must disable the distributed virtual switch health check.'
   $global:NISTcit='CM-6b.'
   $global:finding='If the health check feature is enabled on distributed switches and is not on temporarily for troubleshooting purposes, this is a finding.'
@@ -580,8 +580,8 @@ Function NIST800-53-VI-VC-CFG-01200 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-01201 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01201'
+Function VCSA-80-000272 {
+  $global:VMWConfig='VCSA-80-000272'
   $global:description='Configure all port groups to a value different from the value of the native VLAN.'
   $global:NISTcit='CM-6b.'
   $global:finding='If any port group is configured with the native VLAN of the ESXi hosts attached physical switch, this is a finding.'
@@ -612,8 +612,8 @@ Function NIST800-53-VI-VC-CFG-01201 {
   $global:result_array = $global:result_array+$dataFeed
 }
 
-Function NIST800-53-VI-VC-CFG-01202 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01202'
+Function VCSA-80-000274 {
+  $global:VMWConfig='VCSA-80-000274'
   $global:description='Configure all port groups to VLAN values not reserved by upstream physical switches.'
   $global:NISTcit='AC-4'
   $global:finding='If any port group is configured with a reserved VLAN ID, this is a finding.'
@@ -659,8 +659,8 @@ Function NIST800-53-VI-VC-CFG-01203 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-01204 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01204'
+Function VCSA-80-000009 {
+  $global:VMWConfig='VCSA-80-000009'
   $global:description='The vCenter Server must enable TLS 1.2 exclusively.'
   $global:NISTcit='SC-23'
   $global:finding='If the output indicates versions of TLS other than 1.2 are enabled, this is a finding.'
@@ -674,8 +674,8 @@ Function NIST800-53-VI-VC-CFG-01204 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-01205 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01205'
+Function VVCSA-80-000195 {
+  $global:VMWConfig='VVCSA-80-000195'
   $global:description='The vCenter Server Machine SSL certificate must be issued by an appropriate certificate authority.'
   $global:NISTcit='SC-12(3)'
   $global:finding='If the issuer specified is not an approved certificate authority, this is a finding.'
@@ -690,8 +690,8 @@ Function NIST800-53-VI-VC-CFG-01205 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-01209 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01209'
+Function VCSA-80-000024 {
+  $global:VMWConfig='VCSA-80-000024'
   $global:description='Configure a  message.'
   $global:NISTcit='AC-8a'
   $global:finding='If selection boxes next to "Show login message" is disabled or if "Details of login message" is not configured to an approved standard User Agreement, this is a finding.'
@@ -706,8 +706,8 @@ Function NIST800-53-VI-VC-CFG-01209 {
   $global:result_array = $global:result_array+$result
 }
 
-Function NIST800-53-VI-VC-CFG-01210 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01210'
+Function VCSA-80-000284 {
+  $global:VMWConfig='VCSA-80-000284'
   $global:description='The vCenter Server must restrict access to cryptographic role.'
   $global:NISTcit='AC-17(2)'
   $global:finding='If there are any users other than Solution Users with the "Administrator" role that are not explicitly designated for cryptographic operations, this is a finding.'
@@ -726,8 +726,8 @@ Function NIST800-53-VI-VC-CFG-01210 {
   $global:result_array = $global:result_array+$result
 
 }
-Function NIST800-53-VI-VC-CFG-01211 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01211'
+Function VCSA-80-000285 {
+  $global:VMWConfig='VCSA-80-000285'
   $global:description='vCenter Server must restrict access to cryptographic permissions.'
   $global:NISTcit='AC-17(2)'
   $global:finding='If there are any users other than Solution Users with the "Administrator" role that are not explicitly designated for cryptographic operations, this is a finding.'
@@ -756,8 +756,8 @@ Function NIST800-53-VI-VC-CFG-01211 {
 
 }
 
-Function NIST800-53-VI-VC-CFG-01212 {
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01212'
+Function VCSA-80-000286 {
+  $global:VMWConfig='VCSA-80-000286'
   $global:description='Configure Mutual CHAP for vSAN iSCSI targets.'
   $global:NISTcit='CM-6b'
   $global:finding='If the Authentication method is not set to "CHAP_Mutual" for any iSCSI target, this is a finding.'
@@ -3845,9 +3845,9 @@ Function NIST800-53-VI-VC-CFG-X0415{
   $global:VMWConfig='NIST800-53-VI-VC-CFG-X0415'
   $global:description='The vCenter Server users must have the correct roles assigned.'
   $global:NISTcit='AC-6 Control'
-  $global:finding='The guidance for this parameter has changed due to serious compatibility issues with modern guest operating systems, versus the limited benefit it provided. Do not set this on new virtual machines. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
-  $global:xResult='FALSE'
-  $global:command = 'Get-VM -Name $VM | Get-AdvancedSetting svga.vgaOnly'
+  #$global:finding='The guidance for this parameter has changed due to serious compatibility issues with modern guest operating systems, versus the limited benefit it provided. Do not set this on new virtual machines. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
+  #$global:xResult='FALSE'
+  #$global:command = 'Get-VM -Name $VM | Get-AdvancedSetting svga.vgaOnly'
   
   fn_Print_VM_Control_Info
 
@@ -4712,25 +4712,25 @@ Function fn_Load_vCenter_Controls {
   $global:Control_Array = @(
     'GET-vCENTER-VERSION',
     'GET-vCENTER-BUILD',
-    'NIST800-53-VI-VC-CFG-00415',
-    'NIST800-53-VI-VC-CFG-00415',
-    'NIST800-53-VI-VC-CFG-00404',
-    'NIST800-53-VI-VC-CFG-00405',
-    'NIST800-53-VI-VC-CFG-00407',
-    'NIST800-53-VI-VC-CFG-00417',
-    'NIST800-53-VI-VC-CFG-00420',
-    'NIST800-53-VI-VC-CFG-00450',
-    'NIST800-53-VI-VC-CFG-00428',
-    'NIST800-53-VI-VC-CFG-01200',
-    'NIST800-53-VI-VC-CFG-01201',
-    'NIST800-53-VI-VC-CFG-01202',
+    'VCSA-80-000095',
+    'VCSA-80-000095',# why is this double? 
+    'VCSA-80-000034',
+    'VCSA-80-000270',
+    'VCSA-80-000269',
+    'VCSA-80-000271',
+    'VCSA-80-000282',
+    'VCSA-80-000268',
+    'VCSA-80-000275',
+    'VCSA-80-000267',
+    'VCSA-80-000272',
+    'VCSA-80-000274',
     'NIST800-53-VI-VC-CFG-01203',
-    'NIST800-53-VI-VC-CFG-01204',
-    'NIST800-53-VI-VC-CFG-01205',
-    'NIST800-53-VI-VC-CFG-01209',
-    'NIST800-53-VI-VC-CFG-01210',
-    'NIST800-53-VI-VC-CFG-01211',
-    'NIST800-53-VI-VC-CFG-01212'  
+    'VCSA-80-000009',
+    'VVCSA-80-000195',
+    'VCSA-80-000024',
+    'VCSA-80-000284',
+    'VCSA-80-000285',
+    'VCSA-80-000286'  
   
   )
 }
