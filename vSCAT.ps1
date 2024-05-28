@@ -674,8 +674,8 @@ Function VCSA-80-000009 {
   $global:result_array = $global:result_array+$result
 }
 
-Function VVCSA-80-000195 {
-  $global:VMWConfig='VVCSA-80-000195'
+Function VCSA-80-000195 {
+  $global:VMWConfig='VCSA-80-000195'
   $global:description='The vCenter Server Machine SSL certificate must be issued by an appropriate certificate authority.'
   $global:NISTcit='SC-12(3)'
   $global:finding='If the issuer specified is not an approved certificate authority, this is a finding.'
@@ -1517,8 +1517,8 @@ Function NIST800-53-VI-ESXi-CFG-00031 {
     }
 }
 
-Function NIST800-53-VI-ESXi-CFG-00034 {
-  $global:VMWConfig='NIST800-53-VI-ESXi-CFG-00034'
+Function VCSA-80-000023 {
+  $global:VMWConfig='VCSA-80-000023'
   $global:description='Set the maximum number of failed login attempts before an account is locked.'
   $global:NISTcit='AC-7a.'
   $global:finding='Greater than 3'
@@ -1638,8 +1638,8 @@ Function NIST800-53-VI-ESXi-CFG-00106 {
     }
 }
 
-Function NIST800-53-VI-ESXi-CFG-00109 {
-  $global:VMWConfig='NIST800-53-VI-ESXi-CFG-00109'
+Function VCSA-80-000070 {
+  $global:VMWConfig='VCSA-80-000070'
   $global:description='Configure the password history setting to restrict the reuse of passwords.'
   $global:NISTcit='IA-5(1)(e)'
   $global:finding='Less than 5'
@@ -1932,7 +1932,7 @@ Function NIST800-53-VI-ESXi-CFG-00129 {
     $VMHostName = $VMhost.Name
     $Cluster = $VMhost.Parent
     $esxcli = $VMHost | Get-EsxCli
-    $List += $esxcli.software.vib.list() | Select-Object @{N="VMHostName"; E={$VMHostName}},@{N="Cluster"; E={$Cluster}},*
+    $List += $esxcli.software.mob.list() | Select-Object @{N="VMHostName"; E={$VMHostName}},@{N="Cluster"; E={$Cluster}},*
     $result="See ESXi Patches.csv"
     Write-Host $VMHost -NoNewLine
     Write-Host `t`t`t$result
@@ -2989,9 +2989,9 @@ Function NIST800-53-VI-VC-CFG-00065{
   }
 }
 
-Function NIST800-53-VI-VC-CFG-00155{
+Function VMCH-80-000209{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00155'
+  $global:VMWConfig='VMCH-80-000209'
   $global:description='Unauthorized floppy devices must be disconnected on the virtual machine.'
   $global:NISTcit='P1 - MP-7 Control'
   $global:finding='If a virtual machine has a floppy drive connected, this is a finding.' 
@@ -3020,9 +3020,9 @@ Function NIST800-53-VI-VC-CFG-00155{
 }
 }
 
-Function NIST800-53-VI-VC-CFG-00068{
+Function VMCH-80-000199{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00068'
+  $global:VMWConfig='VMCH-80-000199'
   $global:description='Shared salt values must be disabled on the virtual machine.'
   $global:NISTcit='P2 - CM-6b'
   $global:finding='If the virtual machine advanced setting "sched.mem.pshare.salt" exists, this is a finding.'
@@ -3050,9 +3050,9 @@ Function NIST800-53-VI-VC-CFG-00068{
   }
 }
 
-Function NIST800-53-VI-VC-CFG-00070{
+Function VMCH-80-000191{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00070'
+  $global:VMWConfig='VMCH-80-000191'
   $global:description='Disable drag & drop console functionality.'
   $global:NISTcit='P2'
   $global:finding='When this is set to TRUE a user at the console of a VM (Web Console, VMRC, or other) will not be able to drag and drop data between the VM and the local client. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3080,9 +3080,9 @@ Function NIST800-53-VI-VC-CFG-00070{
 }
 }
 
-Function NIST800-53-VI-VC-CFG-00071{
+Function VMCH-80-000189{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00071'
+  $global:VMWConfig='VMCH-80-000189'
   $global:description='Explicitly disable console copy operations.'
   $global:NISTcit='P2'
   $global:finding='When this is set to TRUE a user at the console of a VM (Web Console, VMRC, or other) will not be able to copy data between the VM and the local client. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3110,9 +3110,9 @@ Function NIST800-53-VI-VC-CFG-00071{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00073{
+Function VMCH-80-000192{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00073'
+  $global:VMWConfig='VMCH-80-000192'
   $global:description='Explicitly disable paste operations.'
   $global:NISTcit='P2'
   $global:finding='When this is set to TRUE a user at the console of a VM (Web Console, VMRC, or other) will not be able to paste data between the VM and the local client. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3140,9 +3140,9 @@ Function NIST800-53-VI-VC-CFG-00073{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00074{
+Function VMCH-80-000193{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00074'
+  $global:VMWConfig='VMCH-80-000193'
   $global:description='Disable virtual disk shrinking.'
   $global:NISTcit='P2'
   $global:finding='Repeated disk shrinking can make a virtual disk unavailable. Limited capability is available to non-administrative users in the guest. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3170,9 +3170,9 @@ Function NIST800-53-VI-VC-CFG-00074{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00075{
+Function VMCH-80-000194{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00075'
+  $global:VMWConfig='VMCH-80-000194'
   $global:description='Disable virtual disk wiping.'
   $global:NISTcit='P2'
   $global:finding='Repeated disk shrinking can make a virtual disk unavailable. Limited capability is available to non-administrative users in the guest. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3230,9 +3230,9 @@ Function NIST800-53-VI-VC-CFG-00076{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00097{
+Function VMCH-80-000195{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00097'
+  $global:VMWConfig='VMCH-80-000195'
   $global:description='Limit the number of console connections.'
   $global:NISTcit='P0'
   $global:finding='Multiple users can connect to a single VM console and observe activity. Limiting this to 1 prevents this behavior.'
@@ -3260,9 +3260,9 @@ Function NIST800-53-VI-VC-CFG-00097{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00099{
+Function VMCH-80-000196{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00099'
+  $global:VMWConfig='VMCH-80-000196'
   $global:description='Limit informational messages from the VM to the VMX file.'
   $global:NISTcit='P1'
   $global:finding='The configuration file containing these name-value pairs is limited to a size of 1 MB by default. This limit is applied even when the sizeLimit parameter is not listed in the .vmx file. Uncontrolled size for the VMX file can lead to denial of service if the datastore is filled.As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3290,9 +3290,9 @@ Function NIST800-53-VI-VC-CFG-00099{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00102{
+Function VMCH-80-000198{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00102'
+  $global:VMWConfig='VMCH-80-000198'
   $global:description='Do not send host information to guests.'
   $global:NISTcit='P2'
   $global:finding='By enabling a VM to get detailed information about the physical host, an adversary could potentially use this information to inform further attacks on the host. As the default is the desired state you can audit by verifying that the parameter is either unset, or that it is set to the suggested value.'
@@ -3348,9 +3348,9 @@ Function VMCH-80-000201{
    }
  }
 }
-Function NIST800-53-VI-VC-CFG-01215{
+Function VMCH-80-000200{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01215'
+  $global:VMWConfig='VMCH-80-000200'
   $global:description='Control access to VMs through the dvfilter network APIs.'
   $global:NISTcit='P2'
   $global:finding='An attacker might compromise a VM by making use the dvFilter API. Configure only those VMs to use the API that need this access. This setting is considered an "Audit Only" guideline. If there is a value present, the admin should check it to ensure it is correct.'
@@ -3378,9 +3378,9 @@ Function NIST800-53-VI-VC-CFG-01215{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01232{
+Function VMCH-80-000201{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01232'
+  $global:VMWConfig='VMCH-80-000201'
   $global:description='Lock the VM guest session when the remote console is disconnected.'
   $global:NISTcit='P2'
   $global:finding='An attacker can take advantage of console sessions left logged in.'
@@ -3408,9 +3408,9 @@ Function NIST800-53-VI-VC-CFG-01232{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01234{
+Function VMCH-80-000203{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01234'
+  $global:VMWConfig='VMCH-80-000203'
   $global:description='Require encryption during vMotion.'
   $global:NISTcit='P1'
   $global:finding='By default a VM uses "opportunistic" vMotion encryption, so migrations to another host use encryption if available, but if not it will vMotion without encryption. Setting this to "required" ensures that if encryption is not available the vMotion does not proceed.'
@@ -3438,9 +3438,9 @@ Function NIST800-53-VI-VC-CFG-01234{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00154{
+Function VMCH-80-000208{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00154'
+  $global:VMWConfig='VMCH-80-000208'
   $global:description='VMs with Independent non-persistent disks.'
   $global:NISTcit='P1'
   $global:finding='VMs with Independent non-persistent disks.'
@@ -3468,9 +3468,9 @@ Function NIST800-53-VI-VC-CFG-00154{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-00561{
+Function VMCH-80-000214{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-00561'
+  $global:VMWConfig='VMCH-80-000214'
   $global:description='Limit PCI device passthrough functionality.'
   $global:NISTcit='P1'
   $global:finding='VThe VMware DirectPath I/O features allow virtual machines to access system hardware directly. This has implications for risk mitigation features such as vMotion, DRS, and High Availability, but also may allow an attacker more privileged access to underlying hardware and the system bus. Ensure that VMs allowed to access hardware directly need this privilege and add compensating controls to ensure the guest OS security.'
@@ -3499,9 +3499,9 @@ Function NIST800-53-VI-VC-CFG-00561{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01233{
+Function VMCH-80-000202{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01233'
+  $global:VMWConfig='VMCH-80-000202'
   $global:description='Disable 3D features if not needed.'
   $global:NISTcit='P1'
   $global:finding='It is suggested that 3D be disabled on virtual machines that do not require 3D functionality, (e.g. server or desktops not using 3D applications). This reduces attack surface.'
@@ -3561,9 +3561,9 @@ Function VMCH-67-000014{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01244{
+Function VMCH-80-000204{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01244'
+  $global:VMWConfig='VMCH-80-000204'
   $global:description='Require encryption for Fault Tolerance logging.'
   $global:NISTcit='P1'
   $global:finding='By default a VM uses "opportunistic" vMotion encryption, so migrations to another host use encryption if available, but if not it will vMotion without encryption. Setting this to "required" ensures that if encryption is not available the vMotion does not proceed.'
@@ -3623,9 +3623,9 @@ Function NIST800-53-VI-VC-CFG-00101{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-XX103{
+Function VMCH-80-000197{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-XX103'
+  $global:VMWConfig='VMCH-80-000197'
   $global:description='Disable the ability for unprivileged users to connect & disconnect virtual machine devices'
   $global:NISTcit='P0'
   $global:finding='Users and processes without root or administrator privileges within virtual machines can connect or disconnect devices, such as network adapters and CD-ROM drives, and can modify device settings. This could lead to unauthorized access, disruption of operations, and denial of service.'
@@ -3747,9 +3747,9 @@ Function NIST800-53-VI-VC-CFG-00093{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01243{
+Function VMCH-80-000206{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01243'
+  $global:VMWConfig='VMCH-80-000206'
   $global:description='Limit the number of retained VM diagnostic logs.'
   $global:NISTcit='P1'
   $global:finding='By default there is a limit of 6 old diagnostic logs. The VMware documentation recommends setting this to 10 to conserve datastore space but also enable troubleshooting should it need to occur.'
@@ -3778,9 +3778,9 @@ Function NIST800-53-VI-VC-CFG-01243{
  }
 }
 
-Function NIST800-53-VI-VC-CFG-01242{
+Function VMCH-80-000205{
 
-  $global:VMWConfig='NIST800-53-VI-VC-CFG-01242'
+  $global:VMWConfig='VMCH-80-000205'
   $global:description='Limit the size of VM diagnostic logs.'
   $global:NISTcit='P0'
   $global:finding='By default there is no limit on VM diagnostic log sizes, and they are rotated when the VM changes power state or live-migrates using vMotion. On long-running VMs this may consume considerable space. The VMware documentation recommends setting this no lower than 2 MB (measured in KB).'
@@ -4726,8 +4726,8 @@ Function fn_Load_vCenter_Controls {
     'VCSA-80-000274',
     'NIST800-53-VI-VC-CFG-01203',
     'VCSA-80-000009',
-    'VVCSA-80-000195',
-    'VCSA-80-000024',
+    'VCSA-80-000195',
+    #'VCSA-80-000024', #standard mandatory dod notice banner on login
     'VCSA-80-000284',
     'VCSA-80-000285',
     'VCSA-80-000286'  
@@ -4759,12 +4759,12 @@ Function fn_Load_ESX_Controls {
     'NIST800-53-VI-ESXi-CFG-00028',
     'NIST800-53-VI-ESXi-CFG-00030',
     'NIST800-53-VI-ESXi-CFG-00031',
-    'NIST800-53-VI-ESXi-CFG-00034',
+    'VCSA-80-000023',
     'NIST800-53-VI-ESXi-CFG-00038',
     'NIST800-53-VI-ESXi-CFG-00043',
     'NIST800-53-VI-ESXi-CFG-00105',
     'NIST800-53-VI-ESXi-CFG-00106',
-    'NIST800-53-VI-ESXi-CFG-00109', 
+    'VCSA-80-000070', 
     'NIST800-53-VI-ESXi-CFG-00110',
     'NIST800-53-VI-ESXi-CFG-00112a',
     'NIST800-53-VI-ESXi-CFG-00112b',
@@ -4813,33 +4813,33 @@ Function fn_Load_ESX_Controls {
 Function fn_Load_VM_Controls {
   # Build Control Array for VM Scan
   $global:Control_Array = @(
-    'NIST800-53-VI-VC-CFG-01244',
-    'NIST800-53-VI-VC-CFG-XX103',
+    'VMCH-80-000204',
+    'VMCH-80-000197',
     'NIST800-53-VI-VC-CFG-XX104',
     'NIST800-53-VI-VC-CFG-00065', # Inludes 00066, 00067, and 00156
-    'NIST800-53-VI-VC-CFG-00155',
-    'NIST800-53-VI-VC-CFG-00068', 
-    'NIST800-53-VI-VC-CFG-00070',
-    'NIST800-53-VI-VC-CFG-00071',
-    'NIST800-53-VI-VC-CFG-00073',
-    'NIST800-53-VI-VC-CFG-00074',
-    'NIST800-53-VI-VC-CFG-00075',
+    'VMCH-80-000209',
+    'VMCH-80-000199', 
+    'VMCH-80-000191',
+    'VMCH-80-000189',
+    'VMCH-80-000192',
+    'VMCH-80-000193',
+    'VMCH-80-000194',
    # 'NIST800-53-VI-VC-CFG-00096', no defined function
-    'NIST800-53-VI-VC-CFG-00097',
-    'NIST800-53-VI-VC-CFG-00099',
+    'VMCH-80-000195',
+    'VMCH-80-000196',
     'NIST800-53-VI-VC-CFG-00101',
-    'NIST800-53-VI-VC-CFG-00102',
-    'NIST800-53-VI-VC-CFG-00561',
-    'NIST800-53-VI-VC-CFG-01215',
-    'NIST800-53-VI-VC-CFG-01232',
-    'NIST800-53-VI-VC-CFG-01233', 
-    'NIST800-53-VI-VC-CFG-01234',
+    'VMCH-80-000198',
+    'VMCH-80-000214',
+    'VMCH-80-000200',
+    'VMCH-80-000201',
+    'VMCH-80-000202', 
+    'VMCH-80-000203',
     'NIST800-53-VI-VC-CFG-XX105',
     'NIST800-53-VI-VC-CFG-00093',
-    'NIST800-53-VI-VC-CFG-01243',
-    'NIST800-53-VI-VC-CFG-01242',
+    'VMCH-80-000206',
+    'VMCH-80-000205',
     'NIST800-53-VI-VC-CFG-XX109',
-    'NIST800-53-VI-VC-CFG-00154',
+    'VMCH-80-000208',
     'NIST800-53-VI-VC-CFG-X0415', 
     'VMCH-80-000201',    
     'VMCH-70-000007',
