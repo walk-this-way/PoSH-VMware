@@ -4600,15 +4600,15 @@ Function fn_STIGMenu {
     Write-Host "Currently Connected to vCenter: " -ForegroundColor Green -NoNewLine
     Write-Host $global:DefaultVIServer -ForegroundColor Yellow
     Write-Host
-    Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
+  <#Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan SDDC Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan NSX Global Manager" -ForegroundColor Green
-    Write-Host
+    Write-Host #>
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
-    Write-Host
+    Write-Host 
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
@@ -4651,6 +4651,10 @@ Function fn_STIGMenu {
          Clear-Host
          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
          fn_vCscanner
+         #testing if can get to this point
+         fn_Build_vCenter_CSV
+         fn_Load_vCenter_Controls
+         fn_RunScan
          fn_PressAnyKey
          fn_STIGMenu
       }  
@@ -4660,6 +4664,10 @@ Function fn_STIGMenu {
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
         fn_ESXiscanner
+        fn_GetESXCreds
+        fn_Build_ESX_CSV
+        fn_Load_ESX_Controls
+        fn_RunScan
         fn_PressAnyKey
         fn_STIGMenu
       }  
@@ -4669,6 +4677,9 @@ Function fn_STIGMenu {
          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
          fn_filter_VMs
          fn_VMscanner
+         fn_Build_VM_CSV
+         fn_Load_VM_Controls
+         fn_RunScan
          fn_PressAnyKey
          fn_STIGMenu
       }  
