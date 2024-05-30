@@ -129,11 +129,7 @@ Function fn_sddcscanner {
     Write-Host $command
     fn_PressAnyKey
     
-    Invoke-Expression $command
-    Write-Host "ESXi Host Scan Complete!"
-  }
-
-  Function fn_vSphereScanner { 
+    Invoke-Expression $command  Function fn_vSphereScanner { 
     Write-Host "Running vSphere (vCenter, ESXi Host, and Virtual Machine) Scan:"
       $env:VISERVER=$global:defaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
@@ -141,7 +137,7 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
     $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/v1r3-stig/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
     Write-Host "The command I'm sending is "
     Write-Host $command
@@ -150,6 +146,10 @@ Function fn_sddcscanner {
     Invoke-Expression $command
     Write-Host "vSphere Scan Complete!"
   }
+    Write-Host "ESXi Host Scan Complete!"
+  }
+
+
 
 
   Function fn_VMscanner { 
@@ -4489,7 +4489,7 @@ Function fn_MainMenu {
     Write-Host
     Write-Host "MAIN MENU" -ForegroundColor Green
     Write-Host
-    Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
+  <#  Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vCenter (VMware Best Practices)" -ForegroundColor Green
     Write-Host
     Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
@@ -4498,6 +4498,7 @@ Function fn_MainMenu {
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan VM Configurations (VMware Best Practices)" -ForegroundColor Green
     Write-Host
+    #>
     Write-Host "[A] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Add Appliance IP to SSH Firewall" -ForegroundColor Green
     Write-Host
@@ -4600,24 +4601,24 @@ Function fn_STIGMenu {
     Write-Host "Currently Connected to vCenter: " -ForegroundColor Green -NoNewLine
     Write-Host $global:DefaultVIServer -ForegroundColor Yellow
     Write-Host
-  <#Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan SDDC Manager" -ForegroundColor Green
-    Write-Host
-    Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
-    Write-Host "Scan NSX Global Manager" -ForegroundColor Green
-    Write-Host #>
-    Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host 
-    Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
-    Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan Virtual Machines" -ForegroundColor Green
     Write-Host
-    Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vSphere Envirnoment" -ForegroundColor Green
     Write-Host
+      <#Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan SDDC Manager" -ForegroundColor Green
+    Write-Host
+    Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan NSX Global Manager" -ForegroundColor Green
+    Write-Host #>
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
@@ -4629,25 +4630,8 @@ Function fn_STIGMenu {
     $menu = Read-Host
     switch ($menu) {
 
-      1 {
-          Clear-Host
-          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-          fn_GetSddcCreds
-          fn_sddcscanner
-          fn_PressAnyKey
-          fn_STIGMenu
-        }
 
-      2 {
-          Clear-Host
-          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
-          fn_getNSXCreds
-          fn_nsxscanner
-          fn_PressAnyKey
-          fn_STIGMenu
-        }  
-      
-      3 {
+      1 {
          Clear-Host
          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
          fn_vCscanner
@@ -4659,7 +4643,7 @@ Function fn_STIGMenu {
          fn_STIGMenu
       }  
 
-      4 {
+      2 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetESXCreds
@@ -4672,7 +4656,7 @@ Function fn_STIGMenu {
         fn_STIGMenu
       }  
 
-      5 {
+      3 {
          Clear-Host
          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
          fn_filter_VMs
@@ -4684,7 +4668,7 @@ Function fn_STIGMenu {
          fn_STIGMenu
       }  
 
-      6 {
+      4 {
          Clear-Host
          if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
          fn_GetESXCreds
@@ -4693,7 +4677,24 @@ Function fn_STIGMenu {
          fn_STIGMenu
             
       }
-     
+      5 {
+        Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_GetSddcCreds
+        fn_sddcscanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }
+
+    6 {
+        Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_getNSXCreds
+        fn_nsxscanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }  
+    
       X {
          Clear-Host
          fn_MainMenu
