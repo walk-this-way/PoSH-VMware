@@ -4604,7 +4604,7 @@ Function fn_STIGMenu {
     Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vCenter (vCenter + OS)" -ForegroundColor Green
     Write-Host 
-    Write-Host "[1] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[2] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan ESXi Hosts" -ForegroundColor Green
     Write-Host
     Write-Host "[3] " -ForegroundColor Yellow -NoNewLine
