@@ -140,7 +140,7 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/v1r3-stig/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey  
