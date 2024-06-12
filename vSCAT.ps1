@@ -120,15 +120,17 @@ Function fn_sddcscanner {
       $jsonOutput = "/root/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
-  <#$command ="inspec exec "+$profilePath+ " --show-progress -t ssh://"+$global:VCuser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+"--input-file"+ $profilePath+"inspec.yml --show-progress --reporter=cli json:"+$jsonOutput  
+  
+    <#$command ="inspec exec "+$profilePath+ " --show-progress -t ssh://"+$global:VCuser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+"--input-file"+ $profilePath+"inspec.yml --show-progress --reporter=cli json:"+$jsonOutput  
     #>
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
    
     Write-Host "The command I'm sending is "
     Write-Host $command
-    fn_PressAnyKey    
-    Invoke-Expression $command  
-     Write-Host "ESXi Host Scan Complete!"  
+    fn_PressAnyKey
+    
+    Invoke-Expression $command
+    Write-Host "ESXi Host Scan Complete!"
   }
 
   Function fn_vSphereScanner { 
@@ -140,13 +142,15 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/v1r3-stig/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
+    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inputs-example.yml --show-progress --reporter=cli json:$jsonOutput"  
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey  
+
     Invoke-Expression $command
     Write-Host "vSphere Scan Complete!"
   }
+
   Function fn_VMscanner { 
     Write-Host "Running ESX Host Scan:"
       $env:VISERVER=$global:defaultVIServer
@@ -4608,7 +4612,7 @@ Function fn_STIGMenu {
     Write-Host "[4] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan vSphere Envirnoment" -ForegroundColor Green
     Write-Host
-      <#Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
+  <#Write-Host "[5] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan SDDC Manager" -ForegroundColor Green
     Write-Host
     Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
