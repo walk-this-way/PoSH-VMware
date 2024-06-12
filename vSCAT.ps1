@@ -141,7 +141,7 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
     $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/v1r3-stig/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
+    $profilePath ="./dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
     Write-Host "The command I'm sending is "
     Write-Host $command
