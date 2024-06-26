@@ -139,7 +139,7 @@ Function fn_sddcscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/vSphere_"+$global:date+".json"
+    $jsonOutput = "/root/results/vSphere_"+$global:defaultVIServer+"_+$global:date+".json
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -157,7 +157,7 @@ Function fn_sddcscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/Virtual Machine_"+$global:date+".json"
+    $jsonOutput = "/root/results/VirtualMachine_"+$global:defaultVIServer+"_+$global:date+".json
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
