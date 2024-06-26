@@ -170,7 +170,7 @@ Function fn_nsxscanner {
   Need to write if/then check for NSX version
   #>
   Write-Host "Running scan of NSX Environment:"
-  $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date
+  $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline'
   $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
