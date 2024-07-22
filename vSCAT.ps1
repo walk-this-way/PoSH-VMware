@@ -4043,7 +4043,7 @@ Function fn_RequestSDDCToken {
   # Photon
   authprivlog: /var/log/audit/auth.log
   sshdcommand: ""sshd -T -C 'user=root'""
-  syslogServer: 'replace.local:514'
+  syslogServer: '$global:SyslogServer:514'
   # SDDC Manager Application
   sddcManager: '$global:SDDCmgr'
   bearerToken: 'Bearer $global:accessToken'
@@ -4303,6 +4303,8 @@ Function fn_GetSddcCreds {
     $global:NTPServer = Read-Host 
     Write-Host "Enter the FQDN or IP of the SFTP Server: " -ForegroundColor Green -NoNewline
     $global:SFTPServer = Read-Host 
+    Write-Host "Enter the FQDN or IP of the Syslog Server: " -ForegroundColor Green -NoNewline
+    $global:SyslogServer = Read-Host
     Write-Host "Requesting SDDC API Token"
 
 # Generate API Tokens for SDDC Manager
