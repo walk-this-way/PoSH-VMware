@@ -105,8 +105,8 @@ Function fn_sddcscanner {
   Write-Host "Running scan of VCF Environment:"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $profilePath = '/root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inputs-vcf-sddc-mgr-4x.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+  $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
   Invoke-Expression $command
   Write-Host "VCF Scan Complete!"
   }
@@ -4025,20 +4025,21 @@ Function fn_RequestSDDCToken {
   Write-Host "Preparing SDDC Manager API Token..."
   Write-Host
   $uri = 'https://'+$global:SDDCmgr+'/v1/tokens' # Set URI for executing an API call to validate authentication
-  $command='curl -X POST -H "Content-Type:application/json" -d ''{"username": "'+$global:VCuser+'", "password": "'+$global:VCpass+'"}'' --insecure ' +$uri
+  $command='curl -X POST -H "Content-Type: application/json" -d ''{"username": "'+$global:VCuser+'", "password": "'+$global:VCpass+'"}'' --insecure ' +$uri
   $result = Invoke-Expression $command
   $APITokenArray = $result -split '"'
   $global:accessToken = $APITokenArray[3]
   $global:refreshToken = $APITokenArray[9]
   Write-Host "Building VCF YAML files..." -ForegroundColor Green
-  $command = 'mv /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml.bak'
+  $command = 'mv /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml.bak'
   Invoke-Expression $command
-  Add-Content  -Path /root/dod-compliance-and-automation/vcf/4.x/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml -Value "
+  Add-Content  -Path /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml -Value "
   # NGINX
   nginx_conf_path: /etc/nginx/nginx.conf
   limit_conn_ip_limit: '100'
   limit_conn_server_limit: '1000'
-  nginx_ssl_ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256'
+  #nginx_ssl_ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256'
+  nginx_ssl_ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256'
   # Photon
   authprivlog: /var/log/audit/auth.log
   sshdcommand: ""sshd -T -C 'user=root'""
@@ -4721,6 +4722,7 @@ Function fn_PressAnyKey {
     Write-Host "Press " -ForegroundColor Yellow -NoNewLine
     Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
     Write-Host " to Continue..." -ForegroundColor Yellow -NoNewLine
+    Write-Host "[Control -C to Break]"
     Read-Host
 }
 
