@@ -1,6 +1,6 @@
 <#
 Version Notes
-Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans) ** Derrill's changes
+Teri's updates : NSX 4.x hard coded, added controls to main menu (VM, Host scans) 
 #>
 
 # Set / Clear all variables 
@@ -16,6 +16,9 @@ $global:VCcreds = ""
 $global:NSXmgr = ""
 $global:ESXSSHCreds = ""
 $global:ESXSSHuser = "blank"
+$global:NSXRootUser = ""
+$global:NSXRootPass = ""
+$global:AriaCreds = ""
 
 
 Function fn_GetAppIP {
@@ -102,13 +105,72 @@ Function fn_Lockdown_on {
 #########################################################################
 
 Function fn_sddcscanner { 
-  Write-Host "Running scan of VCF Environment:"
+  Write-Host "Running scan of VCF Environment (SDDC Manager):"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
   $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
   Invoke-Expression $command
-  Write-Host "VCF Scan Complete!"
+  Write-Host "VCF (SDDC Manager) Scan Complete!"
+  }
+
+  Function fn_ariascanner { 
+    #Get Aria Version
+    $global:Aria = "Aria"
+    Write-Host = "This scanner only works on versions 8.11.x - 8.16.2" -ForegroundColor Red
+    Write-Host "Put in Aria Version (8.x.x):"
+    $global:Aria = Read-Host
+    Write-Host "Aria Version: "$global:Aria
+    Write-Host "Is this correct? y or n"
+    $confirm = Read-Host
+    if ($confirm -eq 'n') {
+      fn_ariascanner
+    }    
+
+    Write-Host "Running scan of Aria Environment:"
+    #Scan Aria Automation
+    $jsonOutput = "/root/results/AriaAutomation_"+$global:Aria+"_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    if ($global:Aria -eq "8.11.0") {
+      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r3-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+    } elseif($global:Aria -eq "8.12.0") {
+      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+    } elseif($global:Aria -eq "8.13.0") {
+      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+    } elseif($global:Aria -match "8.13.1 - 8.16.0") {
+      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r5-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      else($global:Aria -match "8.16.1 - 8.16.2") {
+        $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r6-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      
+    }
+    #inspec exec C:\Inspec\Profiles\vmware-stig-baseline\vmware-vra-8x-stig-baseline -t ssh://root@vra IP or FQDN --password 'password' --input [nputname]=[inputvalue] [inputname]=[inputvalue]
+    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    Invoke-Expression $command
+    Write-Host "Aria Automations Scan Complete!"
+    
+    #Scan Aria Lifecycle Manager
+    $jsonOutput = "/root/results/AriaLifecycleManager_"+$global:Aria+"_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    Invoke-Expression $command
+    Write-Host "Aria Lifecycle Manager Scan Complete!"
+      
+    #Scan Aria Operations for Logs
+    $jsonOutput = "/root/results/AriaOpsforLogs_"+$global:Aria+"_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    Invoke-Expression $command
+    Write-Host "Aria Operations for Logs Scan Complete!"
+  
+   #Scan Aria Operations 
+   $jsonOutput = "/root/results/AriaOps_"+$global:Aria+"_"+$global:date+".json"
+   Write-Host "Saving results to: "$jsonOutput
+   $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+   $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+   Invoke-Expression $command
+   Write-Host "Aria Operations Scan Complete!"
   }
 
   Function fn_ESXiscanner { 
@@ -4147,7 +4209,7 @@ Function fn_RequestNSXToken {
 Function fn_getNSXCreds {
   Clear-Host
 # Determine if NSX Credentials are Valid
-  if ($global:NSXRootCreds -ne '') { 
+ if ($global:NSXRootCreds -ne '') { 
     Write-Host "Currently using: " -ForegroundColor Green -NoNewline
     Write-Host $global:NSXRootUser -ForegroundColor Yellow 
     $passlength = ($global:NSXRootPass.Length)-4
@@ -4233,6 +4295,313 @@ Function fn_getNSXCreds {
  Write-Host "Back from Requesting token..."
  fn_PressAnyKey
 }
+
+Function fn_getAriaCreds {
+  Clear-Host
+  # Determine if Aria Automation Credentials are Valid
+   if ($global:AriaAutomationCreds -ne '') { 
+      Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+      Write-Host $global:AriaAutomationUser -ForegroundColor Yellow 
+      $passlength = ($global:AriaAutomationPass.Length)-4
+      $obs_RootPass = $global:AriaAutomationPass.substring(0,2) 
+      For ($i = 0; $i -lt $passlength; $i++) {
+            $obs_RootPass += "*"
+          }
+      $obs_RootPass = $obs_RootPass.Substring($passlength,-2)
+      Write-Host "With password: "$obs_RootPass ForegroundColor Yellow -NoNewline
+      Write-Host
+      $ChangeAriaAutomationCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+      if ($ChangeAriaAutomationCreds -eq 'N') {
+        $global:AriaAutomationCreds = ''
+        fn_getAriaAutomationCreds
+      }
+    }
+    if ($global:AriaAutomationIP -eq '') {
+      Write-Host "Enter Aria Automation Information:" -ForegroundColor Green 
+      Write-Host
+      Write-Host "Enter the IP Address of Aria Automations: " -ForegroundColor Green -NoNewLine
+      $global:AriaAutomationIP = Read-Host
+      Write-Host
+      Write-Host "Testing ability to find $global:AriaAutomationIP..."
+      if (!(Test-Connection -ComputerName $global:AriaAutomationIP -Quiet -Count 2)) {
+        Write-Host "Unable to find $global:AriaAutomationIP " -ForegroundColor Red
+        Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+        Write-host
+        fn_PressAnyKey
+        fn_getNSXCreds
+      } 
+      Write-Host "Connectivity to $global:AriaAutomationIP verified." -ForegroundColor Green
+      Write-Host
+    } else {
+      Write-Host "You are currently connected to Aria Automation" -ForegroundColor Green -NoNewline
+      Write-Host $global:AriaAutomationIP -ForegroundColor Yellow
+      Write-Host
+      $ChangeAriaAutomationIP = Read-Host "Change Aria Automation (Y/N)?" -NoNewline
+        if ($Change -eq 'Y') {
+        $global:AriaAutomationIP = ''
+        fn_getAriaAutomationCreds
+      }
+    }
+  
+    DO {
+      Clear-Host
+      Write-Host "!! " -ForegroundColor Red -NoNewLine 
+      Write-Host "This process requires ROOT for SSH Aria Automations " -ForegroundColor Green -NoNewLine
+      Write-Host "!!" -ForegroundColor Red
+      Write-Host
+      Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the Aria Automations and verify " -ForegroundColor Green -NoNewLine
+      Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+      Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+      Write-Host "'yes'"-ForegroundColor Yellow
+      Write-Host
+      Write-Host "Enter the " -ForegroundColor Green -NoNewline
+      Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
+      Write-Host " Credentials for $global:AriaAutomationIP" -ForegroundColor Green
+      $global:AriaAutomationUser = Get-Credential
+      $global:AriaAutomationUser= $global:AriaAutomationUser.UserName.ToString()
+      $global:AriaAutomationPass = $global:AriaAutomationPass.GetNetworkCredential().password
+      Write-Host
+      Write-Host "Verifying SSH to Aria Automations $global:AriaAutomationIP :"
+      $global:AriaAutiomationSSHConection = New-SSHSession -ComputerName $global:AriaAutomationIP -Credential $global:AriaAutomationCreds -AcceptKey:$true -ErrorAction ignore
+      if (!$global:AriaAutomationSSHConection.Connected) {
+        Write-Host "SSH Credentials Failed for Aria Automations." -ForegroundColor Red
+        fn_PressAnyKey  
+      } 
+    } while (!$global:AriaAutomationSSHConection.Connected)
+    $SSHCommand = 'ls'
+    Write-Host "Aria Automations SSH Test Successful" -ForegroundColor Green
+    Write-Host "SSH Session State:" $global:AriaAutomationSSHConection.Connected
+    fn_PressAnyKey
+
+    Clear-Host
+    # Determine if Aria Lifecycle Manager Credentials are Valid
+     if ($global:AriaLifecycleCreds -ne '') { 
+        Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+        Write-Host $global:AriaLifecycleUser -ForegroundColor Yellow 
+        $passlength = ($global:AriaLifecyclePass.Length)-4
+        $obs_RootPass = $global:AriaLifecyclePass.substring(0,2) 
+        For ($i = 0; $i -lt $passlength; $i++) {
+              $obs_RootPass += "*"
+            }
+        $obs_RootPass = $obs_RootPass.Substring($passlength,-2)
+        Write-Host "With password: "$obs_RootPass ForegroundColor Yellow -NoNewline
+        Write-Host
+        $ChangeAriaLifecycleCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+        if ($ChangeAriaLifecycleCreds -eq 'N') {
+          $global:AriaLifecycleCreds = ''
+          fn_getAriaLifecycleCreds
+        }
+      }
+      if ($global:AriaLifecycleIP -eq '') {
+        Write-Host "Enter Aria Automation Information:" -ForegroundColor Green 
+        Write-Host
+        Write-Host "Enter the IP Address of Aria Automations: " -ForegroundColor Green -NoNewLine
+        $global:AriaLifecycleIP = Read-Host
+        Write-Host
+        Write-Host "Testing ability to find $global:AriaLifecycleIP..."
+        if (!(Test-Connection -ComputerName $global:AriaLifecycleIP -Quiet -Count 2)) {
+          Write-Host "Unable to find $global:AriaLifecycleIP " -ForegroundColor Red
+          Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+          Write-host
+          fn_PressAnyKey
+          fn_getNSXCreds
+        } 
+        Write-Host "Connectivity to $global:AriaLifecycleIP verified." -ForegroundColor Green
+        Write-Host
+      } else {
+        Write-Host "You are currently connected to Aria Lifecycle Manager" -ForegroundColor Green -NoNewline
+        Write-Host $global:AriaLifecycleIP -ForegroundColor Yellow
+        Write-Host
+        $ChangeAriaLifecycleIP = Read-Host "Change Aria Lifecycle Manager (Y/N)?" -NoNewline        
+        if ($Change -eq 'Y') {
+          $global:AriaLifecycleIP = ''
+          fn_getAriaLifecycleCreds
+        }
+      }
+    
+      DO {
+        Clear-Host
+        Write-Host "!! " -ForegroundColor Red -NoNewLine 
+        Write-Host "This process requires ROOT for SSH to Aria Lifecycle Manager " -ForegroundColor Green -NoNewLine
+        Write-Host "!!" -ForegroundColor Red
+        Write-Host
+        Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the Aria Lifecycle Manager and verify " -ForegroundColor Green -NoNewLine
+        Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+        Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+        Write-Host "'yes'"-ForegroundColor Yellow
+        Write-Host
+        Write-Host "Enter the " -ForegroundColor Green -NoNewline
+        Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
+        Write-Host " Credentials for $global:AriaLifecycleIP" -ForegroundColor Green
+        $global:AriaLifecycleUser = Get-Credential
+        $global:AriaLifecycleUser= $global:AriaLifecycleUser.UserName.ToString()
+        $global:AriaLifecyclePass = $global:AriaLifecyclePass.GetNetworkCredential().password
+        Write-Host
+        Write-Host "Verifying SSH to Aria Lifecycle Manager $global:AriaLifecycleIP :"
+        $global:AriaLifecycleSSHConection = New-SSHSession -ComputerName $global:AriaLifecycleIP -Credential $global:AriaLifecycleCreds -AcceptKey:$true -ErrorAction ignore
+        if (!$global:AriaLifeceycleSSHConection.Connected) {
+          Write-Host "SSH Credentials Failed for Aria Lifecycle Manager." -ForegroundColor Red
+          fn_PressAnyKey  
+        } 
+      } while (!$global:AriaLifecycleSSHConection.Connected)
+      $SSHCommand = 'ls'
+      Write-Host "Aria Lifecycle Manager SSH Test Successful" -ForegroundColor Green
+      Write-Host "SSH Session State:" $global:AriaLifecycleSSHConection.Connected
+      fn_PressAnyKey  
+
+      Clear-Host
+      # Determine if Aria Operations for Logs Credentials are Valid
+       if ($global:AriaOpsLogsCreds -ne '') { 
+          Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+          Write-Host $global:AriaOpsLogsUser -ForegroundColor Yellow 
+          $passlength = ($global:AriaOpsLogsPass.Length)-4
+          $obs_RootPass = $global:AriaOpsLogsPass.substring(0,2) 
+          For ($i = 0; $i -lt $passlength; $i++) {
+                $obs_RootPass += "*"
+              }
+          $obs_RootPass = $obs_RootPass.Substring($passlength,-2)
+          Write-Host "With password: "$obs_RootPass ForegroundColor Yellow -NoNewline
+          Write-Host
+          $ChangeAriaOpsLogsCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+          if ($ChangeAriaOpsLogsCreds -eq 'N') {
+            $global:AriaOpsLogsCreds = ''
+            fn_getAriaOpsLogsCreds
+          }
+        }
+        if ($global:AriaOpsLogsIP -eq '') {
+          Write-Host "Enter Aria Operations for Logs Information:" -ForegroundColor Green 
+          Write-Host
+          Write-Host "Enter the IP Address of Aria Operations for Logs: " -ForegroundColor Green -NoNewLine
+          $global:AriaOpsLogsIP = Read-Host
+          Write-Host
+          Write-Host "Testing ability to find $global:AriaOpsLogsIP..."
+          if (!(Test-Connection -ComputerName $global:AriaOpsLogsIP -Quiet -Count 2)) {
+            Write-Host "Unable to find $global:AriaOpsLogsIP " -ForegroundColor Red
+            Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+            Write-host
+            fn_PressAnyKey
+            fn_getNSXCreds
+          } 
+          Write-Host "Connectivity to $global:AriaOpsLogsIP verified." -ForegroundColor Green
+          Write-Host
+        } else {
+          Write-Host "You are currently connected to Aria Operations for Logs" -ForegroundColor Green -NoNewline
+          Write-Host $global:AriaOpsLogsIP -ForegroundColor Yellow
+          Write-Host
+          $ChangeAriaOpsLogsIP = Read-Host "Change Aria Operations for Logs (Y/N)?" -NoNewline          
+          if ($Change -eq 'Y') {
+            $global:AriaOpsLogsIP = ''
+            fn_getAriaOpsLogsCreds
+          }
+        }
+      
+        DO {
+          Clear-Host
+          Write-Host "!! " -ForegroundColor Red -NoNewLine 
+          Write-Host "This process requires ROOT for SSH to Aria Operations for Logs " -ForegroundColor Green -NoNewLine
+          Write-Host "!!" -ForegroundColor Red
+          Write-Host
+          Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the Aria Operations for Logs and verify " -ForegroundColor Green -NoNewLine
+          Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+          Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+          Write-Host "'yes'"-ForegroundColor Yellow
+          Write-Host
+          Write-Host "Enter the " -ForegroundColor Green -NoNewline
+          Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
+          Write-Host " Credentials for $global:AriaOpsLogsIP" -ForegroundColor Green
+          $global:AriaOpsLogsUser = Get-Credential
+          $global:AriaOpsLogsUser = $global:AriaOpsLogsUser.UserName.ToString()
+          $global:AriaOpsLogsPass = $global:AriaOpsLogsPass.GetNetworkCredential().password
+          Write-Host
+          Write-Host "Verifying SSH to Aria Operations for Logs $global:AriaOpsLogsIP :"
+          $global:AriaOpsLogsSSHConection = New-SSHSession -ComputerName $global:AriaOpsLogsIP -Credential $global:AriaOpsLogsCreds -AcceptKey:$true -ErrorAction ignore
+          if (!$global:AriaOpsLogsSSHConection.Connected) {
+            Write-Host "SSH Credentials Failed for Aria Operations for Logs." -ForegroundColor Red
+            fn_PressAnyKey  
+          } 
+        } while (!$global:AriaOpsLogsSSHConection.Connected)
+        $SSHCommand = 'ls'
+        Write-Host "Aria Operations for Logs SSH Test Successful" -ForegroundColor Green
+        Write-Host "SSH Session State:" $global:AriaOpsLogsSSHConection.Connected
+        fn_PressAnyKey    
+
+        Clear-Host
+        # Determine if Aria Operations Credentials are Valid
+         if ($global:AriaOpsCreds -ne '') { 
+            Write-Host "Currently using: " -ForegroundColor Green -NoNewline
+            Write-Host $global:AriaOpsUser -ForegroundColor Yellow 
+            $passlength = ($global:AriaOpsPass.Length)-4
+            $obs_RootPass = $global:AriaOpsPass.substring(0,2) 
+            For ($i = 0; $i -lt $passlength; $i++) {
+                  $obs_RootPass += "*"
+                }
+            $obs_RootPass = $obs_RootPass.Substring($passlength,-2)
+            Write-Host "With password: "$obs_RootPass ForegroundColor Yellow -NoNewline
+            Write-Host
+            $ChangeAriaOpsCreds = Read-Host "Continue with this SSH Account (Y/N)?" -ForegroundColor Green -NoNewline
+            if ($ChangeAriaOpsCreds -eq 'N') {
+              $global:AriaOpsCreds = ''
+              fn_getAriaOpsCreds
+            }
+          }
+          if ($global:AriaOpsIP -eq '') {
+            Write-Host "Enter Aria Operations Information:" -ForegroundColor Green 
+            Write-Host
+            Write-Host "Enter the IP Address of Aria Operations: " -ForegroundColor Green -NoNewLine
+            $global:AriaOpsLogsIP = Read-Host
+            Write-Host
+            Write-Host "Testing ability to find $global:AriaOpsIP..."
+            if (!(Test-Connection -ComputerName $global:AriaOpsIP -Quiet -Count 2)) {
+              Write-Host "Unable to find $global:AriaOpsIP " -ForegroundColor Red
+              Write-Host "Verify correct FQDN, DNS, and IP Configuration and try again." -ForegroundColor Red
+              Write-host
+              fn_PressAnyKey
+              fn_getNSXCreds
+            } 
+            Write-Host "Connectivity to $global:AriaOpsIP verified." -ForegroundColor Green
+            Write-Host
+          } else {
+            Write-Host "You are currently connected to Aria Operations" -ForegroundColor Green -NoNewline
+            Write-Host $global:AriaOpsIP -ForegroundColor Yellow
+            Write-Host
+            $ChangeAriaOpsIP = Read-Host "Change Aria Operations (Y/N)?" -NoNewline          
+            if ($Change -eq 'Y') {
+              $global:AriaOpsIP = ''
+              fn_getAriaOpsCreds
+            }
+          }
+        
+          DO {
+            Clear-Host
+            Write-Host "!! " -ForegroundColor Red -NoNewLine 
+            Write-Host "This process requires ROOT for SSH to Aria Operations " -ForegroundColor Green -NoNewLine
+            Write-Host "!!" -ForegroundColor Red
+            Write-Host
+            Write-Host "It may be necessary to edit the /etc/ssh/sshd_config on the Aria Operations and verify " -ForegroundColor Green -NoNewLine
+            Write-Host "'PermitRootLogin'" -ForegroundColor Yellow -NoNewLine
+            Write-Host " should be set to " -ForegroundColor Green -NoNewLine
+            Write-Host "'yes'"-ForegroundColor Yellow
+            Write-Host
+            Write-Host "Enter the " -ForegroundColor Green -NoNewline
+            Write-Host "ROOT" -ForegroundColor Yellow -NoNewline
+            Write-Host " Credentials for $global:AriaOpsIP" -ForegroundColor Green
+            $global:AriaOpsUser = Get-Credential
+            $global:AriaOpsUser = $global:AriaOpsUser.UserName.ToString()
+            $global:AriaOpsPass = $global:AriaOpsPass.GetNetworkCredential().password
+            Write-Host
+            Write-Host "Verifying SSH to Aria Operations $global:AriaOpsIP :"
+            $global:AriaOpsSSHConection = New-SSHSession -ComputerName $global:AriaOpsIP -Credential $global:AriaOpsCreds -AcceptKey:$true -ErrorAction ignore
+            if (!$global:AriaOpsSSHConection.Connected) {
+              Write-Host "SSH Credentials Failed for Aria Operations." -ForegroundColor Red
+              fn_PressAnyKey  
+            } 
+          } while (!$global:AriaOpsSSHConection.Connected)
+          $SSHCommand = 'ls'
+          Write-Host "Aria Operations SSH Test Successful" -ForegroundColor Green
+          Write-Host "SSH Session State:" $global:AriaOpsSSHConection.Connected
+          fn_PressAnyKey         
+}
+
 
 Function fn_GetSddcCreds {
   Clear-Host
@@ -4621,6 +4990,9 @@ Function fn_STIGMenu {
     Write-Host "[6] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Scan NSX Global Manager" -ForegroundColor Green
     Write-Host 
+    Write-Host "[7] " -ForegroundColor Yellow -NoNewLine
+    Write-Host "Scan Aria" -ForegroundColor Green
+    Write-Host 
     Write-Host "[X] " -ForegroundColor Yellow -NoNewLine
     Write-Host "Main Menu" -ForegroundColor Green
     Write-Host
@@ -4708,7 +5080,14 @@ Function fn_STIGMenu {
         fn_PressAnyKey
         fn_STIGMenu
       }  
-    
+      7 {
+        Clear-Host
+        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_getAriaCreds
+        fn_ariascanner
+        fn_PressAnyKey
+        fn_STIGMenu
+      }  
       X {
          Clear-Host
          fn_MainMenu
