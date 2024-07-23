@@ -105,46 +105,72 @@ Function fn_Lockdown_on {
 #########################################################################
 
 Function fn_sddcscanner { 
+   $global:SDDCVersion = "SDDC"
+   Write-Host = "This scanner only works on versions 4.4-4.5 & 5.0 - 5.1" -ForegroundColor Red
+    Write-Host "Put in VCF Version (x.x):"
+    $global:SDDCVersion = Read-Host
+    Write-Host "VCF Version: "$global:SDDCVersion
+    Write-Host "Is this correct? y or n"
+    $confirm = Read-Host
+    if ($confirm -eq 'n') {
+      fn_sddcscanner
+    }  
+    $jsonOutput = "/root/results/SDDC_"+$global:SDDCmgr+"_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    if ($global:SDDCVersion -eq "4.4") {
+      $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+    } elseif($global:SDDCVersion -eq "4.5") {
+      $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+    } elseif($global:SDDCVersion -eq "5.0") {
+      $profilePath = 'dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+    } elseif ($global:SDDCVersion -eq "5.1") {
+      $profilePath = 'dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+    } else {
+      Write-Host "Unsupported VCF Version"
+      return
+    }    
   Write-Host "Running scan of VCF Environment (SDDC Manager):"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
   Invoke-Expression $command
   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
 
+#Aria function is not complete
   Function fn_ariascanner { 
-    #Get Aria Version
-    $global:Aria = "Aria"
+    Write-Host "Running scan of Aria Environment:"
+    #Scan Aria Automation
+
+    #Get Aria Automation Version
+    $global:AriaAutomationVersion = "Aria"
     Write-Host = "This scanner only works on versions 8.11.x - 8.16.2" -ForegroundColor Red
     Write-Host "Put in Aria Version (8.x.x):"
-    $global:Aria = Read-Host
-    Write-Host "Aria Version: "$global:Aria
+    $global:AriaAutomationVersion = Read-Host
+    Write-Host "Aria Version: "$global:AriaAutomationVersion
     Write-Host "Is this correct? y or n"
     $confirm = Read-Host
     if ($confirm -eq 'n') {
       fn_ariascanner
-    }    
-
-    Write-Host "Running scan of Aria Environment:"
-    #Scan Aria Automation
-    $jsonOutput = "/root/results/AriaAutomation_"+$global:Aria+"_"+$global:date+".json"
+    }  
+    $jsonOutput = "/root/results/AriaAutomation_"+$global:AriaAutomationIP+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    if ($global:Aria -eq "8.11.0") {
+    if ($global:AriaAutomationVersion -eq "8.11.0") {
       $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r3-srg/inspec/vmware-aria-automation-8x-stig-baseline'
-    } elseif($global:Aria -eq "8.12.0") {
+    } elseif($global:AriaAutomationVersion -eq "8.12.0") {
       $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
-    } elseif($global:Aria -eq "8.13.0") {
+    } elseif($global:AriaAutomationVersion -eq "8.13.0") {
       $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
-    } elseif($global:Aria -match "8.13.1 - 8.16.0") {
+    } elseif($global:AriaAutomationVersion -match "8.13.1 - 8.16.0") {
       $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r5-srg/inspec/vmware-aria-automation-8x-stig-baseline'
-      else($global:Aria -match "8.16.1 - 8.16.2") {
+    }elseif($global:AriaAutomationVersion -match "8.16.1 - 8.16.2") {
         $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r6-srg/inspec/vmware-aria-automation-8x-stig-baseline'
-      
-    }
-    #inspec exec C:\Inspec\Profiles\vmware-stig-baseline\vmware-vra-8x-stig-baseline -t ssh://root@vra IP or FQDN --password 'password' --input [nputname]=[inputvalue] [inputname]=[inputvalue]
-    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    }else {
+        Write-Host "Unsupported VCF Version"
+        return
+      }
+    
+    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:AriaAutomationUser+"@"+$global:AriaAutomationIP+" --password "+ $global:AriaAutomationPass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
     Invoke-Expression $command
     Write-Host "Aria Automations Scan Complete!"
     
@@ -173,6 +199,7 @@ Function fn_sddcscanner {
    Write-Host "Aria Operations Scan Complete!"
   }
 
+
   Function fn_ESXiscanner { 
     Write-Host "Running ESXi Host Scan:"
       $env:VISERVER=$global:defaultVIServer
@@ -182,15 +209,10 @@ Function fn_sddcscanner {
       $jsonOutput = "/root/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
-  
-    <#$command ="inspec exec "+$profilePath+ " --show-progress -t ssh://"+$global:VCuser+"@"+$global:defaultVIServer+" --password "+$global:VCpass+"--input-file"+ $profilePath+"inspec.yml --show-progress --reporter=cli json:"+$jsonOutput  
-    #>
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
-   
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey
-    
     Invoke-Expression $command
     Write-Host "ESXi Host Scan Complete!"
   }
@@ -201,7 +223,7 @@ Function fn_sddcscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/vSphere_"+$global:defaultVIServer+"_+"$global:date+".json"
+    $jsonOutput = "/root/results/vSphere_"+$global:defaultVIServer+"_+"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -219,7 +241,7 @@ Function fn_sddcscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/VirtualMachine_"+$global:defaultVIServer+"_+"$global:date+".json"
+    $jsonOutput = "/root/results/VirtualMachine_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     $profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -228,16 +250,35 @@ Function fn_sddcscanner {
   }
 
 Function fn_nsxscanner { 
-  <#
-  Need to write if/then check for NSX version
-  #>
-  Write-Host "Running scan of NSX Environment:"
-  $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date+".json"
-  Write-Host "Saving results to: "$jsonOutput
-  $profilePath = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline'
-  $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
-  Invoke-Expression $command
-  Write-Host "NSX Global Manager Scan Complete!"
+    #Get NSX Version
+    $global:NSXVersion = "NSX"
+    Write-Host = "This scanner only works on versions 3.2.0.0 & 4.1.0 - 4.1.2.3" -ForegroundColor Red
+    Write-Host "Put in NSX Version (x.x.x.x):"
+    $global:NSXVersion = Read-Host
+    Write-Host "NSX Version: "$global:NSXVersion
+    Write-Host "Is this correct? y or n"
+    $confirm = Read-Host
+    if ($confirm -eq 'n') {
+      fn_nsxscanner
+    }  
+    $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
+    Write-Host "Saving results to: "$jsonOutput
+    if ($global:NSXVersion -contains "3.2") {
+      $profilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
+    } elseif($global:NSXVersion -contains "4.1.0 4.1.0.2 4.1.1") {
+      $profilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
+    } elseif($global:NSXVersion -contains "4.1.2 4.1.2.1 4.1.2.3") {
+      $profilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
+    }else {
+        Write-Host "Unsupported NSX Version"
+        return
+      }
+   Write-Host "Running scan of NSX Environment:"
+   $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date+".json"
+   Write-Host "Saving results to: "$jsonOutput
+   $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
+   Invoke-Expression $command
+   Write-Host "NSX Global Manager Scan Complete!"
 }
   
 Function fn_vCscanner { 
@@ -4086,28 +4127,32 @@ Function fn_RequestSDDCToken {
   Clear-Host
   Write-Host "Preparing SDDC Manager API Token..."
   Write-Host
-  $uri = 'https://'+$global:SDDCmgr+'/v1/tokens' # Set URI for executing an API call to validate authentication
+  $uri = 'https://'+$global:SDDCmgrIP+'/v1/tokens' # Set URI for executing an API call to validate authentication
   $command='curl -X POST -H "Content-Type: application/json" -d ''{"username": "'+$global:VCuser+'", "password": "'+$global:VCpass+'"}'' --insecure ' +$uri
   $result = Invoke-Expression $command
   $APITokenArray = $result -split '"'
   $global:accessToken = $APITokenArray[3]
   $global:refreshToken = $APITokenArray[9]
   Write-Host "Building VCF YAML files..." -ForegroundColor Green
-  $command = 'mv /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml.bak'
+  if ($global:VCFVersion -contains "4") {
+    $VCFprofilePath = $global:profilePath+"/inputs-vcf-sddc-mgr-4x.yml"  
+  } else {
+    $VCFprofilePath = $global:profilePath+"/inputs-vcf-sddc-mgr-5x.yml"
+  }
+  $command = 'mv $VCFprofilePath $VCFprofilePath+".bak"'
   Invoke-Expression $command
-  Add-Content  -Path /root/dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/inputs-vcf-sddc-mgr-4x.yml -Value "
+  Add-Content  -Path $VCFprofilePath -Value "
   # NGINX
   nginx_conf_path: /etc/nginx/nginx.conf
   limit_conn_ip_limit: '100'
   limit_conn_server_limit: '1000'
-  #nginx_ssl_ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256'
   nginx_ssl_ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256'
   # Photon
   authprivlog: /var/log/audit/auth.log
   sshdcommand: ""sshd -T -C 'user=root'""
   syslogServer: '$global:SyslogServer:514'
   # SDDC Manager Application
-  sddcManager: '$global:SDDCmgr'
+  sddcManager: '$global:SDDCmgrIP'
   bearerToken: 'Bearer $global:accessToken'
   sftpBackupsEnabled: true
   sftpServer: '$global:SFTPServer'
@@ -4132,11 +4177,19 @@ Function fn_RequestNSXToken {
   $command = "rm cookies.txt"
   Invoke-Expression $command
   $command = "rm headers.txt"  
-  Invoke-Expression $command
+  Invoke-Expression $command 
   Write-Host "Building YAML files..." -ForegroundColor Green
-  $command= 'mv ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.bak'
+  
+  if ($global:NSXVersion -contains "3") {
+    $NSXprofilePath = $global:profilePath+"/inputs-nsxt-3.x.yml"  
+  } else {
+    $NSXprofilePath = $global:profilePath+"/inputs-nsxt-4.x.yml"
+  }
+
+  $command = 'mv $NSXprofilePath $NSXprofilePath+".bak"'
+  
   Invoke-Expression $command
-  Add-Content  -Path ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml -Value "
+  Add-Content  -Path $NSXprofilePath -Value "
   # General
   nsxManager: '$global:NSXmgr'
   sessionToken: '$global:xxsrftoken'
