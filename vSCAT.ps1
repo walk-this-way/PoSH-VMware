@@ -305,7 +305,7 @@ Function fn_vCscanner {
   $jsonOutput = "/root/results/vCenter_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   #if else for profile path based on version
-  if ($global:vCVersion[0] -eq "7") {
+  if ($global:vCVersion[0] -contains "7") {
     $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
     }
   else {
