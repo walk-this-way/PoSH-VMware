@@ -209,7 +209,7 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
       $jsonOutput = "/root/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    if ($global:vCVersion[0] -eq "7") {
+    if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
@@ -232,7 +232,7 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
     $jsonOutput = "/root/results/vSphere_"+$global:defaultVIServer+"_+"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    if ($global:vCVersion[0] -eq "7") {
+    if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
@@ -256,7 +256,7 @@ Function fn_sddcscanner {
       $env:NO_COLOR=$true
     $jsonOutput = "/root/results/VirtualMachine_"+$global:defaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    if ($global:vCVersion[0] -eq "7") {
+    if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
