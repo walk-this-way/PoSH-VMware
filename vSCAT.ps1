@@ -132,7 +132,7 @@ Function fn_sddcscanner {
   Write-Host "Running scan of VCF Environment (SDDC Manager):"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $command = "inspec exec "+$profilePath+" -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+  $command = "inspec exec "+$profilePath/." -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
   Invoke-Expression $command
   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
@@ -170,7 +170,7 @@ Function fn_sddcscanner {
         return
       }
     
-    $command = "inspec exec "+$profilePath+" -t ssh://"+$global:AriaAutomationUser+"@"+$global:AriaAutomationIP+" --password "+ $global:AriaAutomationPass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+    $command = "inspec exec "+$profilePath/." -t ssh://"+$global:AriaAutomationUser+"@"+$global:AriaAutomationIP+" --password "+ $global:AriaAutomationPass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
     Invoke-Expression $command
     Write-Host "Aria Automations Scan Complete!"
     
