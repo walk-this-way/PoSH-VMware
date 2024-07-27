@@ -10,7 +10,7 @@ $global:allVM = ""
 $global:UnnecessaryHardware = "VirtualUSBController|VirtualUSBXHCIController|VirtualParallelPort|VirtualFloppy|VirtualSerialPort|VirtualHdAudioCard|VirtualAHCIController|VirtualEnsoniq1371|VirtualCdrom"
 $global:SDDCmgr = "Not Connected"
 $global:sddcCreds = ""
-$global:defaultVIServer = "Not Connected"
+$global:DefaultVIServer = "Not Connected"
 $global:DefaultVIServers = ""
 $global:VCcreds = ""
 $global:NSXmgr = ""
@@ -19,6 +19,11 @@ $global:ESXSSHuser = "blank"
 $global:NSXRootUser = ""
 $global:NSXRootPass = ""
 $global:AriaCreds = ""
+$global:NSXRootCreds = ""
+$global:NSXRootPass = ""
+$global:VCFprofilePath = ""
+$global:NSXprofilePath = ""
+
 
 
 Function fn_GetAppIP {
@@ -118,13 +123,13 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/SDDC_"+$global:SDDCmgr+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:SDDCVersion -eq "4.4") {
-      $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "4.5") {
-      $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "5.0") {
-      $profilePath = 'dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
     } elseif ($global:SDDCVersion -eq "5.1") {
-      $profilePath = 'dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
     } else {
       Write-Host "Unsupported VCF Version"
       return
@@ -132,7 +137,7 @@ Function fn_sddcscanner {
   Write-Host "Running scan of VCF Environment (SDDC Manager):"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
-  $command = "inspec exec $profilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+  $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
   Invoke-Expression $command
   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
@@ -203,20 +208,20 @@ Function fn_sddcscanner {
 
   Function fn_ESXiscanner { 
     Write-Host "Running ESXi Host Scan:"
-      $env:VISERVER=$global:defaultVIServer
+      $env:VISERVER=$global:DefaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-      $jsonOutput = "/root/results/ESX_Scan_"+$global:defaultVIServer+"_"+$global:date+".json"
+      $jsonOutput = "/root/results/ESX_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
-      $profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
     }
-    #$profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/esxi"
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
+    
+    $command ="inspec exec $global:profilePath/. -t vmware:// --input-file $global:profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey
@@ -226,11 +231,11 @@ Function fn_sddcscanner {
 
   Function fn_vSphereScanner { 
     Write-Host "Running vSphere (vCenter, ESXi Host, and Virtual Machine) Scan:"
-      $env:VISERVER=$global:defaultVIServer
+      $env:VISERVER=$global:DefaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/vSphere_"+$global:defaultVIServer+"_+"+$global:date+".json"
+    $jsonOutput = "/root/results/vSphere_"+$global:DefaultVIServer+"_+"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
@@ -250,11 +255,11 @@ Function fn_sddcscanner {
 
   Function fn_VMscanner { 
     Write-Host "Running VM Host Scan:"
-      $env:VISERVER=$global:defaultVIServer
+      $env:VISERVER=$global:DefaultVIServer
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/VirtualMachine_"+$global:defaultVIServer+"_"+$global:date+".json"
+    $jsonOutput = "/root/results/VirtualMachine_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
@@ -293,7 +298,7 @@ Function fn_nsxscanner {
         return
       }
    Write-Host "Running scan of NSX Environment:"
-   $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:defaultVIServer+"_"+$global:date+".json"
+   $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
    $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
    Invoke-Expression $command
@@ -4159,11 +4164,12 @@ Function fn_RequestSDDCToken {
   $APITokenArray = $result -split '"'
   $global:accessToken = $APITokenArray[3]
   $global:refreshToken = $APITokenArray[9]
-  Write-Host "Building VCF YAML files..." -ForegroundColor Green
-  if ($global:VCFVersion -contains "4") {
-    $VCFprofilePath = $global:profilePath+"/inputs-vcf-sddc-mgr-4x.yml"  
+
+   Write-Host "Building VCF YAML files..." -ForegroundColor Green
+  if ($global:SDDCVersion -contains "4") {
+    $global:VCFprofilePath = $global:VCFprofilePath+"/inputs-vcf-sddc-mgr-4x.yml"  
   } else {
-    $VCFprofilePath = $global:profilePath+"/inputs-vcf-sddc-mgr-5x.yml"
+    $global:VCFprofilePath = $global:VCFprofilePath+"/inputs-vcf-sddc-mgr-5x.yml"
   }
   $command = 'mv $VCFprofilePath $VCFprofilePath+".bak"'
   Invoke-Expression $command
@@ -4198,8 +4204,8 @@ Function fn_RequestNSXToken {
   $file_data = Get-Content headers.txt | select -first 2 -skip 1
   $global:jsessionid = $file_data[0] -replace ".*JSESSIONID=" -replace "\; Path=.*" -replace "X-XSRF.*"
   $global:xxsrftoken = $file_data[1] -replace ".*:" -replace ".*HttpOnly" -replace ".* "
-  # Write-Host "JSESSION:..."$global:jsessionid -ForegroundColor Yellow
-  # Write-Host "X-XSRF-TOKEN:..."$global:xxsrftoken -ForegroundColor Yellow
+  Write-Host "JSESSION:..."$global:jsessionid -ForegroundColor Yellow
+  Write-Host "X-XSRF-TOKEN:..."$global:xxsrftoken -ForegroundColor Yellow
   $command = "rm cookies.txt"
   Invoke-Expression $command
   $command = "rm headers.txt"  
@@ -4207,15 +4213,15 @@ Function fn_RequestNSXToken {
   Write-Host "Building YAML files..." -ForegroundColor Green
   
   if ($global:NSXVersion -contains "3") {
-    $NSXprofilePath = $global:profilePath+"/inputs-nsxt-3.x.yml"  
+    $global:NSXprofilePath = $global:NSXprofilePath+"/inputs-nsxt-3.x.yml"  
   } else {
-    $NSXprofilePath = $global:profilePath+"/inputs-nsxt-4.x.yml"
+    $global:NSXprofilePath = $global:NSXprofilePath+"/inputs-nsxt-4.x.yml"
   }
 
   $command = 'mv $NSXprofilePath $NSXprofilePath+".bak"'
   
   Invoke-Expression $command
-  Add-Content  -Path $NSXprofilePath -Value "
+  Add-Content  -Path $global:NSXprofilePath -Value "
   # General
   nsxManager: '$global:NSXmgr'
   sessionToken: '$global:xxsrftoken'
@@ -4232,6 +4238,8 @@ Function fn_RequestNSXToken {
   t0dhcplist: []
   t1dhcplist: []
   t1multicastlist: [] "
+
+  #### FIX PATHS!!!!
   $command= 'mv ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.bak'
   Invoke-Expression $command
   Add-Content  -Path ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml -Value "
@@ -4322,7 +4330,7 @@ Function fn_getNSXCreds {
     Write-Host "Connectivity to $global:NSXmgr verified." -ForegroundColor Green
     Write-Host
   } else {
-    Write-Host "You are currently connected to NSX GM Manager" -ForegroundColor Green -NoNewline
+    Write-Host "You are currently connected to NSX Global Manager" -ForegroundColor Green -NoNewline
     Write-Host $global:NSXmgr -ForegroundColor Yellow
     Write-Host
     $ChangeNSXMgr = Read-Host "Change NSX Global Manager (Y/N)?" -NoNewline
@@ -4685,7 +4693,7 @@ Function fn_getAriaCreds {
 Function fn_GetSddcCreds {
   Clear-Host
 # Determine if vCenter Credentials are Defined
-  if ($global:defaultVIServer -eq 'Not Connected') {
+  if ($global:DefaultVIServer -eq 'Not Connected') {
     Write-Host "No vCenter SSO Credentials Identified." -ForegroundColor Red
     Write-Host "You must connect to the linked vCenter Server to continue." -ForegroundColor Yellow
     fn_PressAnyKey
@@ -4764,14 +4772,14 @@ Function fn_GetSddcCreds {
 
 Function fn_GetvCenterCreds {
 # If connected to a vCenter give option to switch. 
-  if ($global:defaultVIServer -ne "Not Connected") {
+  if ($global:DefaultVIServer -ne "Not Connected") {
     Write-Host "Currently connected to: " -ForegroundColor Green -NoNewline
-    Write-Host $global:defaultVIServer -ForegroundColor Yellow 
+    Write-Host $global:DefaultVIServer -ForegroundColor Yellow 
     Write-Host
     $ChangevCenter = Read-Host "Stay connected to this vCenter (Y/N)?"
     if ($ChangevCenter -eq 'N') {
-      Disconnect-VIServer -Server $global:defaultVIServer
-      $global:defaultVIServer = "Not Connected"
+      Disconnect-VIServer -Server $global:DefaultVIServer
+      $global:DefaultVIServer = "Not Connected"
       fn_GetvCenterCreds
     }
   }
@@ -4800,14 +4808,14 @@ Function fn_GetvCenterCreds {
     if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
 
   # Set Inspec ENV Vars
-    $env:VISERVER=$global:defaultVIServer
+    $env:VISERVER=$global:DefaultVIServer
     $env:VISERVER_USERNAME=$global:VCuser
     $env:VISERVER_PASSWORD=$global:VCpass
     $env:NO_COLOR=$true
     #Connect-SsoAdminServer -server $env:VISERVER -user $env:VISERVER_USERNAME -password $env:VISERVER_PASSWORD -SkipCertificateCheck
   }
 # Re-Do Bad Login
-  if (!$defaultVIServer) {
+  if (!$DefaultVIServer) {
   Clear-Host
   Write-Host "Invalid Login" -ForegroundColor red | fn_PressAnyKey | fn_GetvCenterCreds
   }
@@ -4820,7 +4828,7 @@ Function fn_GetvCenterCreds {
   Write-Host "vCenter Version: "$global:vCVersion
 
 # Get vCenter API Token
-  $command = "curl -s -k -X POST -H 'Accept: application/json' --basic -u "+$global:VCuser+":"+$global:VCpass+" https://$global:defaultVIServer/rest/com/vmware/cis/session"
+  $command = "curl -s -k -X POST -H 'Accept: application/json' --basic -u "+$global:VCuser+":"+$global:VCpass+" https://$global:DefaultVIServer/rest/com/vmware/cis/session"
   $global:vCAPIToken = Invoke-Expression $command
   $global:vCAPIToken = $global:vCAPIToken.Remove(0,9) -replace ".{1}$"
   $global:vCAPIToken = $global:vCAPIToken -replace '[""]','' 
@@ -4835,14 +4843,14 @@ Function fn_GetvCenterCreds {
   if ($global:vCVersion -lt '7.0.2') {
     $apipath = "rest/appliance/access/ssh"
   }
-  $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:defaultVIServer/$apipath"
+  $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:DefaultVIServer/$apipath"
   $vCSSH= Invoke-Expression $command
   Write-Host "vCenter SSH Status: "$vCSSH -ForegroundColor Green
   if (!$vCSSH) {
-    $command = "curl -k -s -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:defaultVIServer/api/appliance/access/ssh"
+    $command = "curl -k -s -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:DefaultVIServer/api/appliance/access/ssh"
     Write-Host "Enabeling SSH on vCenter "$global:DefaultVIServer -ForegroundColor Green
     Invoke-Expression $command
-    $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:defaultVIServer/api/appliance/access/ssh"
+    $command = "curl -s -k -H 'vmware-api-session-id: $global:vCAPIToken' https://$global:DefaultVIServer/api/appliance/access/ssh"
     $vCSSH= Invoke-Expression $command    
   }
 #>
@@ -4862,18 +4870,18 @@ Function fn_GetvCenterCreds {
 # Enable SHELL for Root
  <#   Write-Host "Enabeling Shell for root"
     if ($global:vCVersion -eq "7") {
-    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:defaultVIServer/api/appliance/access/shell"
+    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""enabled"":true}' https://$global:DefaultVIServer/api/appliance/access/shell"
     }
     if ($global:vCVersion -eq "8") {
-    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""config"":{""enabled"":true,""timeout"":10}}' https://$global:defaultVIServer/rest/appliance/access/shell"
+    $command = "curl -k -s -o -X PUT -H 'vmware-api-session-id: $global:vCAPIToken' -H 'Content-Type: application/json' -d '{""config"":{""enabled"":true,""timeout"":10}}' https://$global:DefaultVIServer/rest/appliance/access/shell"
     }
     # Write-Host "With Command: "$command
     Invoke-Expression $command
     Write-Host
  #>
 # Test vCenter SSH
-    Write-Host "Testing SSH connection to "$global:defaultVIServer
-    $global:vCSSSHConnection = New-SSHSession -ComputerName $global:defaultVIServer -Credential $global:VCSSHCreds -AcceptKey:$true -ErrorAction ignore
+    Write-Host "Testing SSH connection to "$global:DefaultVIServer
+    $global:vCSSSHConnection = New-SSHSession -ComputerName $global:DefaultVIServer -Credential $global:VCSSHCreds -AcceptKey:$true -ErrorAction ignore
     Write-Host "Session : " $global:vCSSSHConnection
     if (!$global:vCSSSHConnection.Connected) {
       Write-Host "SSH Credentials Failed for vCenter." -ForegroundColor Red
@@ -4933,9 +4941,9 @@ Write-Host "Enter ESX SSH Credentials"
 Function fn_MainMenu {
     $host.UI.RawUI.BackgroundColor = "Black"
     Clear-Host
-    if (!($global:defaultVIServer)) {$global:defaultVIServer = "Not Connected"}
+    if (!($global:DefaultVIServer)) {$global:DefaultVIServer = "Not Connected"}
     Write-Host "Currently Connected to: " -ForegroundColor Green -NoNewLine
-    Write-Host $global:defaultVIServer -ForegroundColor Yellow
+    Write-Host $global:DefaultVIServer -ForegroundColor Yellow
     Write-Host
     Write-Host "MAIN MENU" -ForegroundColor Green
     Write-Host
