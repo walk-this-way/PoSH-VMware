@@ -4161,6 +4161,8 @@ Function fn_RequestSDDCToken {
   $uri = 'https://'+$global:SDDCmgrIP+'/v1/tokens' # Set URI for executing an API call to validate authentication
   $command='curl -X POST -H "Content-Type: application/json" -d ''{"username": "'+$global:VCuser+'", "password": "'+$global:VCpass+'"}'' --insecure ' +$uri
   #$command = 'curl -X POST -H "Content-Type: application/json" -d '{"username": "+$global:VCuser", "password": "+$global:VCpass"}' --insecure ' +$uri
+  Write-Host $command
+  fn_PressAnyKey
   $result = Invoke-Expression $command
   $APITokenArray = $result -split '"'
   $global:accessToken = $APITokenArray[3]
