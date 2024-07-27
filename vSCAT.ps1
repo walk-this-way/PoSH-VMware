@@ -138,8 +138,6 @@ Function fn_sddcscanner {
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
-  Write-Host "The command I'm sending is "
-  Write-Host $command
   Invoke-Expression $command
   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
@@ -4162,9 +4160,6 @@ Function fn_RequestSDDCToken {
   Write-Host
   $uri = 'https://'+$global:SDDCmgr+'/v1/tokens' # Set URI for executing an API call to validate authentication
   $command='curl -X POST -H "Content-Type: application/json" -d ''{"username": "'+$global:VCuser+'", "password": "'+$global:VCpass+'"}'' --insecure ' +$uri
-  #$command = 'curl -X POST -H "Content-Type: application/json" -d '{"username": "+$global:VCuser", "password": "+$global:VCpass"}' --insecure ' +$uri
-  Write-Host $command
-  fn_PressAnyKey
   $result = Invoke-Expression $command
   $APITokenArray = $result -split '"'
   $global:accessToken = $APITokenArray[3]
