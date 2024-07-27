@@ -123,13 +123,13 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/SDDC_"+$global:SDDCmgr+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:SDDCVersion -eq "4.4") {
-      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+      $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "4.5") {
-      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+      $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "5.0") {
-      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+      $global:VCFprofilePath = './dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
     } elseif ($global:SDDCVersion -eq "5.1") {
-      $global:VCFprofilePath = 'dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+      $global:VCFprofilePath = './dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
     } else {
       Write-Host "Unsupported VCF Version"
       return
