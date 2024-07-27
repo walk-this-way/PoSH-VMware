@@ -138,6 +138,8 @@ Function fn_sddcscanner {
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
   Write-Host "Saving results to: "$jsonOutput
   $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+  Write-Host "The command I'm sending is "
+  Write-Host $command
   Invoke-Expression $command
   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
