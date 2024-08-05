@@ -4244,7 +4244,7 @@ Function fn_RequestNSXToken {
   t1multicastlist: [] "
 
   #### FIX PATHS!!!!
-  $command= 'mv '$global:NSXprofilePath'/inspec.yml '$global:NSXprofilePath'/inspec.bak'
+  $command= 'mv $global:NSXprofilePath/inspec.yml $global:NSXprofilePath/inspec.bak'
   Invoke-Expression $command
   Add-Content  -Path $global:NSXprofilePath/inspec.yml -Value "
   name: vmware-nsx-4.0-stig-inspec-baseline
