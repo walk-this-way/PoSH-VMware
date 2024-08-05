@@ -274,7 +274,7 @@ Function fn_sddcscanner {
   }
 
 Function fn_nsxscanner { 
-    #Get NSX Version
+    #Get NSX Version, NTP, SYSLOG, and NSX Manager IP
     $global:NSXVersion = "NSX"
     Write-Host = "This scanner only works on versions 3.2.0.0 & 4.1.0 - 4.1.2.3" -ForegroundColor Red
     Write-Host "Put in NSX Version (x.x.x.x):"
@@ -284,23 +284,33 @@ Function fn_nsxscanner {
     $confirm = Read-Host
     if ($confirm -eq 'n') {
       fn_nsxscanner
+    $global:NSXNPTserver = "IP"
+    Write-Host "Put in NSX NTP Server (IP or FQDN):"
+    $global:NSXNTPserver = Read-Host
+    $global:NSXSyslogServer = "IP"
+    Write-Host "Put in NSX Syslog Server (IP or FQDN):"
+    $global:NSXSyslogServer = Read-Host
     }  
     $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:NSXVersion -contains "3.2") {
-      $profilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
+      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
+      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x.yml'
     } elseif($global:NSXVersion -contains "4.1.0 4.1.0.2 4.1.1") {
-      $profilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
+      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
+      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
     } elseif($global:NSXVersion -contains "4.1.2 4.1.2.1 4.1.2.3") {
-      $profilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
+      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
+      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
     }else {
         Write-Host "Unsupported NSX Version"
         return
-      }
+      }   
+
    Write-Host "Running scan of NSX Environment:"
    $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
-   $command ="inspec exec $profilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file /root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml --show-progress --reporter=cli json:$jsonOutput"
+   $command ="inspec exec $global:NSXprofilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXinputfile --show-progress --reporter=cli json:$jsonOutput"
    Invoke-Expression $command
    Write-Host "NSX Global Manager Scan Complete!"
 }
@@ -317,7 +327,7 @@ Function fn_vCscanner {
     $profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
   }
   #$profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vcenter"
-  $command ="inspec exec $profilePath -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --show-progress --reporter=cli json:"+$jsonOutput
+  $command ="inspec exec $profilePath -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --input-file $global:profilePath/inputs-example.yml --show-progress --reporter=cli json:"+$jsonOutput
   Invoke-Expression $command
   Write-Host "vCenter Scan Complete!"
 }
@@ -4212,27 +4222,21 @@ Function fn_RequestNSXToken {
   Invoke-Expression $command 
   Write-Host "Building YAML files..." -ForegroundColor Green
   
-  if ($global:NSXVersion -contains "3") {
-    $global:NSXprofilePath = $global:NSXprofilePath+"/inputs-nsxt-3.x.yml"  
-  } else {
-    $global:NSXprofilePath = $global:NSXprofilePath+"/inputs-nsxt-4.x.yml"
-  }
-
   $command = 'mv $NSXprofilePath $NSXprofilePath+".bak"'
   
   Invoke-Expression $command
-  Add-Content  -Path $global:NSXprofilePath -Value "
+  Add-Content  -Path $global:NSXinputfile -Value "
   # General
   nsxManager: '$global:NSXmgr'
   sessionToken: '$global:xxsrftoken'
   sessionCookieId: 'JSESSIONID=$global:jsessionid'
   # Manager
   syslogServers:
-    - 'loginsight.vmware.com'
+    - '$global:NSXSyslogServer'
     - 'log.test.local'
-  ntpServer1: 'time.vmware.com'
+  ntpServer1: '$global:NSXNTPserver'
   ntpServer2: 'time.vmware.com'
-  nsxtVersion: '3.2.3.0'
+  nsxtVersion: '$global:NSXVersion'
   t0multicastlist: []
   t0mcinterfacelist: []
   t0dhcplist: []
@@ -4240,9 +4244,9 @@ Function fn_RequestNSXToken {
   t1multicastlist: [] "
 
   #### FIX PATHS!!!!
-  $command= 'mv ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.bak'
+  $command= 'mv '$global:NSXprofilePath'/inspec.yml '$global:NSXprofilePath'/inspec.bak'
   Invoke-Expression $command
-  Add-Content  -Path ~/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inspec.yml -Value "
+  Add-Content  -Path $global:NSXprofilePath/inspec.yml -Value "
   name: vmware-nsx-4.0-stig-inspec-baseline
   title: VMware NSX GM STIG InSpec Profile
   maintainer: The Authors
@@ -4270,7 +4274,7 @@ Function fn_RequestNSXToken {
     sensitive: true
   - name: syslogServers
     type: array
-    value: ['loginsight.vmware.com','log.test.local']
+    value: ['$global:NSXSyslogServer','log.test.local']
     description: 'TNDM-3X-000034 enter array of valid syslog servers'
 
     depends:
@@ -4282,12 +4286,12 @@ Function fn_RequestNSXToken {
       path: sdc
     - name: t0fw
       path: t0fw
-    - name: t0rtr
-      path: t0rtr
+    - name: t0router
+      path: t0router
     - name: t1fw
       path: t1fw
-    - name: t1rtr
-      path: t1rtr"
+    - name: t1router
+      path: t1router"
 
   Write-Host "NSX GM YAML Files Updated."
   fn_PressAnyKey
