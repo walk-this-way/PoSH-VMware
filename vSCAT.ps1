@@ -277,7 +277,7 @@ Function fn_NSXScanner {
    Write-Host "Running scan of NSX Environment:"
    $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
-   $command ="inspec exec $global:NSXProfilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXInspecFile --show-progress --reporter=cli json:$jsonOutput"
+   $command ="inspec exec $global:NSXProfilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXInputFile --show-progress --reporter=cli json:$jsonOutput"
    Write-Host "The command I'm sending is "
    Write-Host $command
    Invoke-Expression $command
@@ -4191,10 +4191,10 @@ Function fn_RequestNSXToken {
   $command = "rm headers.txt"  
   Invoke-Expression $command 
 
-Write-Host "Building inputs-nsx-4.x-example.yml file..." -ForegroundColor Green
+Write-Host "Building inputs-nsx-x.x-example.yml file..." -ForegroundColor Green
 
-$global:NSXInputFile = $global:NSXProfilePath+'/inputs-nsx-4.x-example.yml'
-$command = 'mv '+$global:NSXProfilePath+'/inputs-nsx-4.x-example.yml '+$global:NSXProfilePath+'/inputs-nsx-4.x-example.bak'
+#$global:NSXInputFile = $global:NSXProfilePath+'/inputs-nsx-4.x-example.yml'
+$command = 'mv '+$global:NSXInputFile +$global:NSXInputFile+'.bak'
 
 Set-Content -Path $global:NSXInputFile -Value "
 # General
@@ -4261,19 +4261,19 @@ Function fn_GetNSXVersion {
 
     C {
         $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
-        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x-example.yml'
+        $global:NSXInputFile = '/root/dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x-example.yml'
         $global:NSXVersion = '3.0.0.0'   #####   fix this
      }  
 
     B {
         $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
-        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
+        $global:NSXInputFile = '/root/dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
         $global:NSXVersion = '4.1.1'   #####   fix this
     }
 
     A {
         $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
-        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
+        $global:NSXInputFile = '/root/dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
         $global:NSXVersion = '4.1.2.3'   #####   fix this
     }
   }
