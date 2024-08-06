@@ -22,7 +22,7 @@ $global:AriaCreds = ""
 $global:NSXRootCreds = ""
 $global:NSXRootPass = ""
 $global:VCFprofilePath = ""
-$global:NSXprofilePath = ""
+$global:NSXProfilePath = "" 
 
 
 
@@ -262,10 +262,10 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/VirtualMachine_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
-      $profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
     }
     #$profilePath ="/root/dod-compliance-and-automation/vsphere/"+$global:vCVersion[0]+".0/vsphere/inspec/vmware-vsphere-"+$global:vCVersion[0]+".0-stig-baseline/vm"
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -273,15 +273,14 @@ Function fn_sddcscanner {
     Write-Host "Virtual Machine Scan Complete!"
   }
 
-Function fn_nsxscanner { 
+Function fn_NSXScanner { 
    Write-Host "Running scan of NSX Environment:"
    $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
-   $command ="inspec exec $global:NSXprofilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXinputfile --show-progress --reporter=cli json:$jsonOutput"
-   Invoke-Expression $command
+   $command ="inspec exec $global:NSXProfilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXInspecFile --show-progress --reporter=cli json:$jsonOutput"
    Write-Host "The command I'm sending is "
    Write-Host $command
-   fn_PressAnyKey
+   Invoke-Expression $command
    Write-Host "NSX Global Manager Scan Complete!"
 }
   
@@ -4178,6 +4177,7 @@ Function fn_RequestSDDCToken {
 Function fn_RequestNSXToken {
   Clear-Host
   Write-Host "Preparing NSX-T Manager API Token..." -ForegroundColor Green
+  Write-Host "Profile Path: "$global:NSXProfilePath
   $uri = "https://$global:NSXmgr/api/session/create" # Set URI for executing an API call to validate authentication
   $command = "curl -k -s -c cookies.txt -D headers.txt -X POST -d 'j_username=$global:NSXTAdminUser&j_password=$global:NSXTAdminPass' $uri"
   Invoke-Expression $command
@@ -4190,83 +4190,106 @@ Function fn_RequestNSXToken {
   Invoke-Expression $command
   $command = "rm headers.txt"  
   Invoke-Expression $command 
-  Write-Host "Building YAML files..." -ForegroundColor Green
+
+Write-Host "Building inputs-nsx-4.x-example.yml file..." -ForegroundColor Green
+
+$global:NSXInputFile = $global:NSXProfilePath+'/inputs-nsx-4.x-example.yml'
+$command = 'mv '+$global:NSXProfilePath+'/inputs-nsx-4.x-example.yml '+$global:NSXProfilePath+'/inputs-nsx-4.x-example.bak'
+
+Set-Content -Path $global:NSXInputFile -Value "
+# General
+# NSX Manager IP or FQDN
+nsxManager: '$global:NSXmgr'
+# Session token generated for access to NSX. Example ead781b8-0e0c-456f-a04a-584e9ae2e45a
+sessionToken: '$global:xxsrftoken'
+# Session cookie id generated for access to NSX. Example 'JSESSIONID=2A165FCF851CA50FCD038DFC8E770038'
+sessionCookieId: '$global:jsessionid'
+# Manager
+# Provide a list of authorized users and their roles to validate assigned permissions in NSX. The default local users and their roles are provided as an example. This currently only validates roles assigned to all of NSX and not to Projects or other scopes.
+authorizedPermissions:
+  admin:
+    role: 'Enterprise Admin'
+  audit:
+    role: 'Auditor'
+  guestuser1:
+    role: 'Auditor'
+  guestuser2:
+    role: 'Auditor'
+# Enter the environment specific syslog server vCenter should be forwarding logs to.
+syslogServers:
+  - '$global:NSXSyslogServer'
+# Enter the environment specific time servers.
+ntpServers:
+  - '$global:NTPServer'
+# Enter latest NSX version. Example '4.1.1.0'
+nsxtVersion: '$global:NSXVersion'
+# Enter an array of T0 Gateways that are approved to have multicast enabled.
+t0multicastlist: []
+# Enter an array of T0 Gateways interfaces that are approved to have multicast enabled.
+t0mcinterfacelist: []
+# Enter an array of T0 Gateways that are approved to have DHCP enabled.
+t0dhcplist: []
+# Enter an array of T1 Gateways that are approved to have DHCP enabled.
+t1dhcplist: []
+# Enter an array of T1 Gateways that are approved to have multicast enabled.
+t1multicastlist: []"
   
-  $command = 'cp $global:NSXinputfile $global:NSXinputfile+".bak"'
+Write-Host "NSX Inputs File Updated."
+
+Write-Host "NSX Profile Path is: " $global:NSXProfilePath
   
-  Invoke-Expression $command
-  Add-Content  -Path $global:NSXinputfile -Value "
-  # General
-  nsxManager: '$global:NSXmgr'
-  sessionToken: '$global:xxsrftoken'
-  sessionCookieId: 'JSESSIONID=$global:jsessionid'
-  # Manager
-  syslogServers:
-    - '$global:NSXSyslogServer'
-    - 'log.test.local'
-  ntpServer1: '$global:NSXNTPserver'
-  ntpServer2: 'time.vmware.com'
-  nsxtVersion: '$global:NSXVersion'
-  t0multicastlist: []
-  t0mcinterfacelist: []
-  t0dhcplist: []
-  t1dhcplist: []
-  t1multicastlist: [] "
-
- 
-  $command= 'cp $global:NSXprofilePath/inspec.yml $global:NSXprofilePath/inspec.bak'
-  Invoke-Expression $command
-  Add-Content  -Path $global:NSXprofilePath/inspec.yml -Value "
-  name: vmware-nsx-4.0-stig-inspec-baseline
-  title: VMware NSX GM STIG InSpec Profile
-  maintainer: The Authors
-  copyright: The Authors
-  copyright_email: stigs@vmware.com
-  license: Apache-2.0
-  summary: InSpec Compliance Profile for NSX-T 3.x
-  version: 1.2
-
-  inputs:
-  - name: nsxManager
-    type: string
-    value: '$global:NSXmgr'
-    description: 'VIP or FQDN of NSX GM Manager'
-  # We use session based authentication in this profile to avoid username/pass   See https://developer.vmware.com/apis/1248/nsx-t on how to generate the session token and you will also need the JSESSIONID cookie
-  - name: sessionToken
-    type: string
-    value: '$global:xxsrftoken'
-    description: 'X-XSRF-TOKEN session token for authentication'
-    sensitive: true
-  - name: sessionCookieId
-    type: string
-    value: 'JSESSIONID=$global:jsessionid'
-    description: 'JSESSIONID Cookie in the format JSESSIONID=ECEF0CE603677B7FC5F34523714B7F5A for example'
-    sensitive: true
-  - name: syslogServers
-    type: array
-    value: ['$global:NSXSyslogServer','log.test.local']
-    description: 'TNDM-3X-000034 enter array of valid syslog servers'
-
-    depends:
-    - name: dfw
-      path: dfw
-    - name: manager
-      path: manager
-    - name: sdc
-      path: sdc
-    - name: t0fw
-      path: t0fw
-    - name: t0router
-      path: t0router
-    - name: t1fw
-      path: t1fw
-    - name: t1router
-      path: t1router"
-
-  Write-Host "NSX GM YAML Files Updated."
-  fn_PressAnyKey
+fn_PressAnyKey
 }
 
+Function fn_GetNSXVersion {
+  #Get NSX Version, NTP, SYSLOG, and NSX Manager IP
+  $global:NSXVersion = "NSX"
+  Write-Host = "This scanner only works on versions 3.2 & 4.1.0 - 4.1.2" -ForegroundColor Red
+  Write-Host "NSX Version:"
+  Write-Host
+  Write-Host "[A] - 4.1.2 or Greater"
+  Write-Host
+  Write-Host "[B] - 4.1.0 to 4.1.1"
+  Write-Host
+  Write-Host "[C] - 3.x"
+  Write-Host
+  Write-Host "Select: " -ForegroundColor Green -NoNewline
+  $global:NSXVersionMenu = Read-Host
+
+  switch ($global:NSXVersionMenu) {
+
+
+    C {
+        $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
+        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x-example.yml'
+        $global:NSXVersion = '3.0.0.0'   #####   fix this
+     }  
+
+    B {
+        $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
+        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
+        $global:NSXVersion = '4.1.1'   #####   fix this
+    }
+
+    A {
+        $global:NSXProfilePath = '/root/dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
+        $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x-example.yml'
+        $global:NSXVersion = '4.1.2.3'   #####   fix this
+    }
+  }
+
+  $global:NSXNTPserver = "IP"
+  Write-Host "NSX NTP Server (IP or FQDN): " -ForegroundColor Green -NoNewline
+  $global:NSXNTPserver = Read-Host
+  $global:NSXSyslogServer = "IP"
+  Write-Host "NSX Syslog Server (IP or FQDN): " -ForegroundColor Green -NoNewline
+  $global:NSXSyslogServer = Read-Host
+     
+  $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
+  Write-Host "Saving results to: "$jsonOutput
+
+   Write-Host "Profile Path: "$global:NSXProfilePath
+}
 Function fn_getNSXCreds {
 # Determine if NSX Credentials are Valid
  if ($global:NSXRootCreds -ne '') { 
@@ -4286,6 +4309,7 @@ Function fn_getNSXCreds {
       fn_getNSXCreds
     }
   }
+
   if ($global:NSXmgr -eq '') {
     Write-Host "NSX-T Manager Information:" -ForegroundColor Green 
     Write-Host
@@ -4297,38 +4321,6 @@ Function fn_getNSXCreds {
       Write-Host "Unable to find $global:NSXmgr " -ForegroundColor Red
       Write-Host "Verify correct FQDN, DNS, and VIP Configuration and try again." -ForegroundColor Red
       Write-host
-  #Get NSX Version, NTP, SYSLOG, and NSX Manager IP
-  $global:NSXVersion = "NSX"
-  Write-Host = "This scanner only works on versions 3.2.0.0 & 4.1.0 - 4.1.2.3" -ForegroundColor Red
-  Write-Host "Put in NSX Version (x.x.x.x):"
-  $global:NSXVersion = Read-Host
-  Write-Host "NSX Version: "$global:NSXVersion
-  Write-Host "Is this correct? y or n"
-  $confirm = Read-Host
-  if ($confirm -eq 'n') {
-    fn_nsxscanner
-  $global:NSXNPTserver = "IP"
-  Write-Host "Put in NSX NTP Server (IP or FQDN):"
-  $global:NSXNTPserver = Read-Host
-  $global:NSXSyslogServer = "IP"
-  Write-Host "Put in NSX Syslog Server (IP or FQDN):"
-  $global:NSXSyslogServer = Read-Host
-  }  
-  $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
-  Write-Host "Saving results to: "$jsonOutput
-  if ($global:NSXVersion -imatch "3.2") {
-    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
-    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x.yml'
-  } elseif($global:NSXVersion -imatch "4.1.0, 4.1.0.2, 4.1.1") {
-    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
-    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
-  } elseif($global:NSXVersion -imatch "4.1.2") {
-    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
-    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
-  }else {
-      Write-Host "Unsupported NSX Version"
-      return
-    } 
       fn_PressAnyKey
       fn_getNSXCreds
     } 
@@ -4383,9 +4375,9 @@ Function fn_getNSXCreds {
   $global:NSXTAdminUser= $NSXTAdminCreds.UserName.ToString()
   $global:NSXTAdminPass = $NSXTAdminCreds.GetNetworkCredential().password
  # Write-Host
- fn_RequestNSXToken
- Write-Host "Back from Requesting token..."
  fn_PressAnyKey
+
+ Write-Host "Profile Path: "$global:NSXProfilePath
 }
 
 Function fn_getAriaCreds {
@@ -5167,8 +5159,10 @@ Function fn_STIGMenu {
     6 {
         Clear-Host
         if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        fn_GetNSXVersion
         fn_getNSXCreds
-        fn_nsxscanner
+        fn_RequestNSXToken
+        fn_NSXScanner
         fn_PressAnyKey
         fn_STIGMenu
       }  
@@ -5194,8 +5188,9 @@ Function fn_STIGMenu {
 Function fn_PressAnyKey {
     Write-Host "Press " -ForegroundColor Yellow -NoNewLine
     Write-Host "[Enter]" -ForegroundColor Red -NoNewLine
-    Write-Host " to Continue..." -ForegroundColor Yellow -NoNewLine
-    Write-Host "[Control -C to Break]"
+    Write-Host " to Continue or " -ForegroundColor Yellow -NoNewLine
+    Write-Host "[CTL-C] " -ForegroundColor Red -NoNewLine
+    Write-Host "to Exit" -ForegroundColor Yellow -NoNewLine
     Read-Host
 }
 
