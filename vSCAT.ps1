@@ -274,44 +274,14 @@ Function fn_sddcscanner {
   }
 
 Function fn_nsxscanner { 
-    #Get NSX Version, NTP, SYSLOG, and NSX Manager IP
-    $global:NSXVersion = "NSX"
-    Write-Host = "This scanner only works on versions 3.2.0.0 & 4.1.0 - 4.1.2.3" -ForegroundColor Red
-    Write-Host "Put in NSX Version (x.x.x.x):"
-    $global:NSXVersion = Read-Host
-    Write-Host "NSX Version: "$global:NSXVersion
-    Write-Host "Is this correct? y or n"
-    $confirm = Read-Host
-    if ($confirm -eq 'n') {
-      fn_nsxscanner
-    $global:NSXNPTserver = "IP"
-    Write-Host "Put in NSX NTP Server (IP or FQDN):"
-    $global:NSXNTPserver = Read-Host
-    $global:NSXSyslogServer = "IP"
-    Write-Host "Put in NSX Syslog Server (IP or FQDN):"
-    $global:NSXSyslogServer = Read-Host
-    }  
-    $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
-    Write-Host "Saving results to: "$jsonOutput
-    if ($global:NSXVersion -contains "3.2") {
-      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
-      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/3.x/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x.yml'
-    } elseif($global:NSXVersion -contains "4.1.0 4.1.0.2 4.1.1") {
-      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
-      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
-    } elseif($global:NSXVersion -contains "4.1.2 4.1.2.1 4.1.2.3") {
-      $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
-      $global:NSXinputfile = '/root/dod-compliance-and-automation/nsx/4.x/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
-    }else {
-        Write-Host "Unsupported NSX Version"
-        return
-      }   
-
    Write-Host "Running scan of NSX Environment:"
    $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
    $command ="inspec exec $global:NSXprofilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXinputfile --show-progress --reporter=cli json:$jsonOutput"
    Invoke-Expression $command
+   Write-Host "The command I'm sending is "
+   Write-Host $command
+   fn_PressAnyKey
    Write-Host "NSX Global Manager Scan Complete!"
 }
   
@@ -4222,7 +4192,7 @@ Function fn_RequestNSXToken {
   Invoke-Expression $command 
   Write-Host "Building YAML files..." -ForegroundColor Green
   
-  $command = 'mv $NSXprofilePath $NSXprofilePath+".bak"'
+  $command = 'cp $global:NSXinputfile $global:NSXinputfile+".bak"'
   
   Invoke-Expression $command
   Add-Content  -Path $global:NSXinputfile -Value "
@@ -4243,8 +4213,8 @@ Function fn_RequestNSXToken {
   t1dhcplist: []
   t1multicastlist: [] "
 
-  #### FIX PATHS!!!!
-  $command= 'mv $global:NSXprofilePath/inspec.yml $global:NSXprofilePath/inspec.bak'
+ 
+  $command= 'cp $global:NSXprofilePath/inspec.yml $global:NSXprofilePath/inspec.bak'
   Invoke-Expression $command
   Add-Content  -Path $global:NSXprofilePath/inspec.yml -Value "
   name: vmware-nsx-4.0-stig-inspec-baseline
@@ -4298,7 +4268,6 @@ Function fn_RequestNSXToken {
 }
 
 Function fn_getNSXCreds {
-  Clear-Host
 # Determine if NSX Credentials are Valid
  if ($global:NSXRootCreds -ne '') { 
     Write-Host "Currently using: " -ForegroundColor Green -NoNewline
@@ -4328,6 +4297,38 @@ Function fn_getNSXCreds {
       Write-Host "Unable to find $global:NSXmgr " -ForegroundColor Red
       Write-Host "Verify correct FQDN, DNS, and VIP Configuration and try again." -ForegroundColor Red
       Write-host
+  #Get NSX Version, NTP, SYSLOG, and NSX Manager IP
+  $global:NSXVersion = "NSX"
+  Write-Host = "This scanner only works on versions 3.2.0.0 & 4.1.0 - 4.1.2.3" -ForegroundColor Red
+  Write-Host "Put in NSX Version (x.x.x.x):"
+  $global:NSXVersion = Read-Host
+  Write-Host "NSX Version: "$global:NSXVersion
+  Write-Host "Is this correct? y or n"
+  $confirm = Read-Host
+  if ($confirm -eq 'n') {
+    fn_nsxscanner
+  $global:NSXNPTserver = "IP"
+  Write-Host "Put in NSX NTP Server (IP or FQDN):"
+  $global:NSXNTPserver = Read-Host
+  $global:NSXSyslogServer = "IP"
+  Write-Host "Put in NSX Syslog Server (IP or FQDN):"
+  $global:NSXSyslogServer = Read-Host
+  }  
+  $jsonOutput = "/root/results/NSX_"+$global:NSXmgr+"_"+$global:date+".json"
+  Write-Host "Saving results to: "$jsonOutput
+  if ($global:NSXVersion -imatch "3.2") {
+    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline'
+    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/3.x/v1r3-stig/inspec/vmware-nsxt-3.x-stig-baseline/inputs-nsxt-3.x.yml'
+  } elseif($global:NSXVersion -imatch "4.1.0, 4.1.0.2, 4.1.1") {
+    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline'
+    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
+  } elseif($global:NSXVersion -imatch "4.1.2") {
+    $global:NSXprofilePath = 'dod-compliance-and-automation/nsx/4.x/v1r2-srg/inspec/vmware-nsx-4.x-stig-baseline'
+    $global:NSXinputfile = 'dod-compliance-and-automation/nsx/4.x/v1r1-srg/inspec/vmware-nsx-4.x-stig-baseline/inputs-nsx-4.x.yml'
+  }else {
+      Write-Host "Unsupported NSX Version"
+      return
+    } 
       fn_PressAnyKey
       fn_getNSXCreds
     } 
