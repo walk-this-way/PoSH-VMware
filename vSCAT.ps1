@@ -111,8 +111,17 @@ Function fn_Lockdown_on {
 
 Function fn_sddcscanner { 
    $global:SDDCVersion = "SDDC"
-   Write-Host = "This scanner only works on versions 4.4-4.5 & 5.0 - 5.1" -ForegroundColor Red
-    Write-Host "Put in VCF Version (x.x):"
+    Write-Host = "This scanner only works on versions 4.4-4.5 & 5.0 - 5.1" -ForegroundColor Red
+    Write-Host "What version of VCF are you running?"
+    Write-Host
+    Write-Host "[A] - Version 4.4"
+    Write-Host
+    Write-Host "[B] - Version 4.5"
+    Write-Host
+    Write-Host "[C] - Version 5.0"
+    Write-Host
+    Write-Host "[D] - Version 5.1" 
+    Write-Host "Select: A, B, C, or D: " - ForegroundColor Green -NoNewline
     $global:SDDCVersion = Read-Host
     Write-Host "VCF Version: "$global:SDDCVersion
     Write-Host "Is this correct? y or n"
@@ -120,12 +129,35 @@ Function fn_sddcscanner {
     if ($confirm -eq 'n') {
       fn_sddcscanner
     }  
+    
+    switch ($global:SDDCVersion) {
+       'A' {
+         $global:SDDCVersion = "4.4"
+         $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+        }
+       'B' {
+          $global:SDDCVersion = "4.5"
+          $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+        }
+       'C' {
+          $global:SDDCVersion = "5.0"
+          $global:VCFprofilePath = './dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+        }
+      'D' {
+          $global:SDDCVersion = "5.1"
+          $global:VCFprofilePath = './dod-compliance-and-automation/vcf/5.x/v1r1-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
+        }
+      default {Write-Host "Invalid Selection"}
+    }
+    
     $jsonOutput = "/root/results/SDDC_"+$global:SDDCmgr+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
+
+<#
     if ($global:SDDCVersion -eq "4.4") {
       $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "4.5") {
-      $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
+      
     } elseif($global:SDDCVersion -eq "5.0") {
       $global:VCFprofilePath = './dod-compliance-and-automation/vcf/5.x/v1r2-srg/inspec/vmware-cloud-foundation-sddcmgr-5x-stig-baseline'
     } elseif ($global:SDDCVersion -eq "5.1") {
@@ -133,6 +165,7 @@ Function fn_sddcscanner {
     } else {
       Write-Host "Unsupported VCF Version"
       return
+      #>
     }    
   Write-Host "Running scan of VCF Environment (SDDC Manager):"
   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
@@ -5158,7 +5191,7 @@ Function fn_STIGMenu {
 
     6 {
         Clear-Host
-        if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
+        #if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetNSXVersion
         fn_getNSXCreds
         fn_RequestNSXToken
