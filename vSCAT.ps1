@@ -121,6 +121,7 @@ Function fn_sddcscanner {
     Write-Host "[C] - Version 5.0"
     Write-Host
     Write-Host "[D] - Version 5.1" 
+    Write-Host
     Write-Host "Select: A, B, C, or D: " - ForegroundColor Green -NoNewline
     $global:SDDCVersion = Read-Host
     Write-Host "VCF Version: "$global:SDDCVersion
@@ -153,7 +154,7 @@ Function fn_sddcscanner {
     $jsonOutput = "/root/results/SDDC_"+$global:SDDCmgr+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
 
-<#
+ <#
     if ($global:SDDCVersion -eq "4.4") {
       $global:VCFprofilePath = './dod-compliance-and-automation/vcf/4.x/v1r3-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline'
     } elseif($global:SDDCVersion -eq "4.5") {
@@ -165,17 +166,17 @@ Function fn_sddcscanner {
     } else {
       Write-Host "Unsupported VCF Version"
       return
-      #>
-    }    
-  Write-Host "Running scan of VCF Environment (SDDC Manager):"
-  $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
-  Write-Host "Saving results to: "$jsonOutput
-  $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
-  Invoke-Expression $command
-  Write-Host "VCF (SDDC Manager) Scan Complete!"
+      
+    } #>  
+   Write-Host "Running scan of VCF Environment (SDDC Manager):"
+   $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
+   Write-Host "Saving results to: "$jsonOutput
+   $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+   Invoke-Expression $command
+   Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
 
-#Aria function is not complete
+ #Aria function is not complete
   Function fn_ariascanner { 
     Write-Host "Running scan of Aria Environment:"
     #Scan Aria Automation
@@ -308,7 +309,7 @@ Function fn_sddcscanner {
 
 Function fn_NSXScanner { 
    Write-Host "Running scan of NSX Environment:"
-   $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:DefaultVIServer+"_"+$global:date+".json"
+   $jsonOutput = "/root/results/NSX_Scan_"+$global:NSXmgr+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
    $command ="inspec exec $global:NSXProfilePath/. --show-progress -t ssh://"+$global:NSXRootUser+"@"+$global:NSXmgr+" --password '"+$global:NSXRootPass+"' --input-file $global:NSXInputFile --show-progress --reporter=cli json:$jsonOutput"
    Write-Host "The command I'm sending is "
@@ -834,23 +835,6 @@ Function VCSA-80-000195 {
 
   $global:result_array = $global:result_array+$result
 }
-
-Function VCSA-80-000024 {
-  $global:VMWConfig='VCSA-80-000024'
-  $global:description='Configure a  message.'
-  $global:NISTcit='AC-8a'
-  $global:finding='If selection boxes next to "Show login message" is disabled or if "Details of login message" is not configured to an approved standard User Agreement, this is a finding.'
-  $global:xResult='Site Specific'
-  $global:command='From the vSphere Client, go to Administration >> Single Sign On >> Configuration >> Login Message'
-  fn_Print_vCenter_Control_Info
-
-  Write-Host "Verify Logon Message" -NoNewLine
-  $result = "Mannually Check and Document"
-  Write-Host `t`t`t$result
-
-  $global:result_array = $global:result_array+$result
-}
-
 Function VCSA-80-000284 {
   $global:VMWConfig='VCSA-80-000284'
   $global:description='The vCenter Server must restrict access to cryptographic role.'
@@ -5239,7 +5223,6 @@ Function fn_Load_vCenter_Controls {
     'GET-vCENTER-VERSION',
     'GET-vCENTER-BUILD',
     'VCSA-80-000095',
-    'VCSA-80-000095',# why is this double? 
     'VCSA-80-000034',
     'VCSA-80-000270',
     'VCSA-80-000269',
@@ -5253,7 +5236,6 @@ Function fn_Load_vCenter_Controls {
     'NIST800-53-VI-VC-CFG-01203',
     'VCSA-80-000009',
     'VCSA-80-000195',
-    #'VCSA-80-000024', #standard mandatory dod notice banner on login
     'VCSA-80-000284',
     'VCSA-80-000285',
     'VCSA-80-000286'  
