@@ -172,7 +172,7 @@ Function fn_sddcscanner {
    $jsonOutput = "/root/results/VCF_Scan_"+$global:SDDCmgr+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
    $command = "inspec exec $global:VCFprofilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:VCFprofilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
-   Invoke-Expression $command
+   #Invoke-Expression $command
    Write-Host "VCF (SDDC Manager) Scan Complete!"
   }
 
@@ -194,6 +194,8 @@ Function fn_sddcscanner {
     }  
     $jsonOutput = "/root/results/AriaAutomation_"+$global:AriaAutomationIP+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
+
+
     if ($global:AriaAutomationVersion -eq "8.11.0") {
       $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r3-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     } elseif($global:AriaAutomationVersion -eq "8.12.0") {
@@ -269,7 +271,7 @@ Function fn_sddcscanner {
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
-    $jsonOutput = "/root/results/vSphere_"+$global:DefaultVIServer+"_+"+$global:date+".json"
+    $jsonOutput = "/root/results/vSphere_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
       $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
@@ -5244,7 +5246,7 @@ Function fn_Load_vCenter_Controls {
 }
 
 Function fn_Load_ESX_Controls {
-  # Build Control Array for vCenter 7x
+  # Build Control Array for vCenter 
   $global:Control_Array = @(
     'GET-ESX-Version',
     'GET-ESX-Build',
@@ -5465,7 +5467,7 @@ Function fn_Build_VM_CSV {
    Write-Host "You can filter the names of the VMs being tested" -ForegroundColor Green
    Write-Host "Enter the search string to filter or just press Enter to not filter" -ForegroundColor Green
    Write-Host "Filtering must have a * wildcard at the front or back (or both) to match multiple VMs" -ForegroundColor Green
-   Write-Host "Enter Optional Hostname Filter  " -ForegroundColor Yellow -NoNewLine
+   Write-Host "Enter Optional Hostname Filter, * to scan all VMs  " -ForegroundColor Yellow -NoNewLine
    $global:filter = Read-Host
 
   # Build first Column of report
