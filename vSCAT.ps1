@@ -4222,7 +4222,7 @@ nsxManager: '$global:NSXmgr'
 # Session token generated for access to NSX. Example ead781b8-0e0c-456f-a04a-584e9ae2e45a
 sessionToken: '$global:xxsrftoken'
 # Session cookie id generated for access to NSX. Example 'JSESSIONID=2A165FCF851CA50FCD038DFC8E770038'
-sessionCookieId: '$global:jsessionid'
+sessionCookieId: JSESSIONID='$global:jsessionid'
 # Manager
 # Provide a list of authorized users and their roles to validate assigned permissions in NSX. The default local users and their roles are provided as an example. This currently only validates roles assigned to all of NSX and not to Projects or other scopes.
 authorizedPermissions:
@@ -5177,7 +5177,6 @@ Function fn_STIGMenu {
 
     6 {
         Clear-Host
-        #if ($global:DefaultVIServer -eq "Not Connected") {fn_GetvCenterCreds}
         fn_GetNSXVersion
         fn_getNSXCreds
         fn_RequestNSXToken
