@@ -200,10 +200,10 @@ Function fn_SDDCScanner {
       $jsonOutput = "/root/results/ESX_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/esxi"
       }
     else {
-      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/esxi"
     }
     
     $command ="inspec exec $global:profilePath/. -t vmware:// --input-file $global:profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
@@ -246,10 +246,10 @@ Function fn_SDDCScanner {
     $jsonOutput = "/root/results/VirtualMachine_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vm"
       }
     else {
-      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vm"
     }
   
     $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
@@ -275,16 +275,16 @@ Function fn_vCscanner {
   Write-Host "vCenter Version: "$global:vCVersion
   Write-Host "vCenter Major Version: "$global:DefaultVIServer.Version[0]
   if ($global:vCVersion -lt "8") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.3") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v2r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v2r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.2") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.1") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-srg/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-srg/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
     else {
     Write-Host "vCenter Version Not Determined" -ForegroundColor Red
@@ -4260,7 +4260,7 @@ nsxManager: '$global:NSXmgr'
 # Session token generated for access to NSX. Example ead781b8-0e0c-456f-a04a-584e9ae2e45a
 sessionToken: '$global:xxsrftoken'
 # Session cookie id generated for access to NSX. Example 'JSESSIONID=2A165FCF851CA50FCD038DFC8E770038'
-sessionCookieId: '$global:jsessionid'
+sessionCookieId: 'JSESSIONID=$global:jsessionid'
 # Manager
 # Provide a list of authorized users and their roles to validate assigned permissions in NSX. The default local users and their roles are provided as an example. This currently only validates roles assigned to all of NSX and not to Projects or other scopes.
 authorizedPermissions:
