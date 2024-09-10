@@ -5174,12 +5174,10 @@ Function fn_ScanMenu {
          fn_Build_vCenter_CSV
          fn_Load_vCenter_Controls
          fn_RunScan
-         fn_ESXiscanner
          fn_Build_ESX_CSV
          fn_Load_ESX_Controls
          fn_RunScan
          fn_filter_VMs
-         fn_VMscanner
          fn_Build_VM_CSV
          fn_Load_VM_Controls
          fn_RunScan
