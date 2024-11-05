@@ -4334,11 +4334,11 @@ Function fn_GetNSXVersion {
     } else {
       fn_GetNSXVersion
     }
-
-  $global:NSXNTPserver = "IP"
+  
+  $global:NSXNTPserver = "NTPIP"
   Write-Host "NSX NTP Server (IP or FQDN): " -ForegroundColor Green -NoNewline
   $global:NSXNTPserver = Read-Host
-  $global:NSXSyslogServer = "IP"
+  $global:NSXSyslogServer = "SYSLONGIP"
   Write-Host "NSX Syslog Server (IP or FQDN): " -ForegroundColor Green -NoNewline
   $global:NSXSyslogServer = Read-Host
      
