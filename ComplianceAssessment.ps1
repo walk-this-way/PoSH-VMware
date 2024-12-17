@@ -146,21 +146,21 @@ Function fn_SDDCScanner {
 
 
     if ($global:AriaAutomationVersion -eq "8.11.0") {
-      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r3-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      $global:ProfilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r3-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     } elseif($global:AriaAutomationVersion -eq "8.12.0") {
-      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      $global:ProfilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     } elseif($global:AriaAutomationVersion -eq "8.13.0") {
-      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      $global:ProfilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r4-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     } elseif($global:AriaAutomationVersion -match "8.13.1 - 8.16.0") {
-      $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r5-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+      $global:ProfilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r5-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     }elseif($global:AriaAutomationVersion -match "8.16.1 - 8.16.2") {
-        $profilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r6-srg/inspec/vmware-aria-automation-8x-stig-baseline'
+        $global:ProfilePath = 'dod-compliance-and-automation/aria/automation/8.x/v1r6-srg/inspec/vmware-aria-automation-8x-stig-baseline'
     }else {
         Write-Host "Unsupported VCF Version"
         return
       }
     
-    $command = "inspec exec $profilePath/. -t ssh://"+$global:AriaAutomationUser+"@"+$global:AriaAutomationIP+" --password "+ $global:AriaAutomationPass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
+    $command = "inspec exec $global:ProfilePath/. -t ssh://"+$global:AriaAutomationUser+"@"+$global:AriaAutomationIP+" --password "+ $global:AriaAutomationPass+" --input-file="+$global:ProfilePath+"/inspec.yml --show-progress --reporter=cli json:"+$jsonOutput
     Invoke-Expression $command
     Write-Host "Aria Automations Scan Complete!"
     
@@ -168,24 +168,24 @@ Function fn_SDDCScanner {
     $jsonOutput = "/root/results/AriaLifecycleManager_"+$global:Aria+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     #fix profile path for all components
-    $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-    $command = "inspec exec $profilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    $global:ProfilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+    $command = "inspec exec $global:ProfilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:ProfilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
     Invoke-Expression $command
     Write-Host "Aria Lifecycle Manager Scan Complete!"
       
     #Scan Aria Operations for Logs
     $jsonOutput = "/root/results/AriaOpsforLogs_"+$global:Aria+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
-    $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-    $command = "inspec exec $profilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+    $global:ProfilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+    $command = "inspec exec $global:ProfilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:ProfilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
     Invoke-Expression $command
     Write-Host "Aria Operations for Logs Scan Complete!"
   
    #Scan Aria Operations 
    $jsonOutput = "/root/results/AriaOps_"+$global:Aria+"_"+$global:date+".json"
    Write-Host "Saving results to: "$jsonOutput
-   $profilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
-   $command = "inspec exec $profilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$profilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
+   $global:ProfilePath = 'dod-compliance-and-automation/vcf/4.x/v1r4-srg/inspec/vmware-vcf-sddcmgr-4x-stig-baseline/'
+   $command = "inspec exec $global:ProfilePath/. -t ssh://"+$global:SDDCuser+"@"+$global:SDDCmgr+" --password "+ $global:SDDCpass+" --input-file="+$global:ProfilePath+"/inspec.yml --show-progress --reporter=cli json:/results/"+$jsonOutput
    Invoke-Expression $command
    Write-Host "Aria Operations Scan Complete!"
   }
@@ -200,13 +200,13 @@ Function fn_SDDCScanner {
       $jsonOutput = "/root/results/ESX_Scan_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/esxi"
+      $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/esxi"
       }
     else {
-      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/esxi"
+      $global:ProfilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/esxi"
     }
     
-    $command ="inspec exec $global:profilePath/. -t vmware:// --input-file $global:profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
+    $command ="inspec exec $global:ProfilePath/. -t vmware:// --input-file $global:ProfilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput" 
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey
@@ -223,12 +223,12 @@ Function fn_SDDCScanner {
     $jsonOutput = "/root/results/vSphere_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
+      $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline"
       }
     else {
-      $profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
+      $global:ProfilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline"
     }    
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
+    $command ="inspec exec $global:ProfilePath/. -t vmware:// --input-file $global:ProfilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
     Write-Host "The command I'm sending is "
     Write-Host $command
     fn_PressAnyKey  
@@ -239,20 +239,20 @@ Function fn_SDDCScanner {
 
   Function fn_VMscanner { 
     Write-Host "Running VM Host Scan:"
-      $env:VISERVER=$global:DefaultVIServer
+      $env:VISERVER=$global:DefaultVIServer 
       $env:VISERVER_USERNAME=$global:VCuser
       $env:VISERVER_PASSWORD=$global:VCpass
       $env:NO_COLOR=$true
     $jsonOutput = "/root/results/VirtualMachine_"+$global:DefaultVIServer+"_"+$global:date+".json"
     Write-Host "Saving results to: "$jsonOutput
     if ($global:vCVersion[0] -contains "7") {
-      $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vm"
+      $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vm"
       }
     else {
-      $global:profilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vm"
+      $global:ProfilePath = "/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vm"
     }
   
-    $command ="inspec exec $profilePath/. -t vmware:// --input-file $profilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
+    $command ="inspec exec $global:ProfilePath/. -t vmware:// --input-file $global:ProfilePath/inspec.yml --show-progress --reporter=cli json:$jsonOutput"  
     Invoke-Expression $command
     Write-Host "Virtual Machine Scan Complete!"
   }
@@ -275,22 +275,22 @@ Function fn_vCscanner {
   Write-Host "vCenter Version: "$global:vCVersion
   Write-Host "vCenter Major Version: "$global:DefaultVIServer.Version[0]
   if ($global:vCVersion -lt "8") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vcenter"
+    $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/7.0/v1r3-stig/vsphere/inspec/vmware-vsphere-7.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.3") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v2r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
+    $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v2r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.2") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
+    $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-stig/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
   elseif ($global:vCVersion -eq "8.0.1") {
-    $global:profilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-srg/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
+    $global:ProfilePath ="/root/dod-compliance-and-automation/vsphere/8.0/v1r1-srg/vsphere/inspec/vmware-vsphere-8.0-stig-baseline/vcenter"
     }
     else {
     Write-Host "vCenter Version Not Determined" -ForegroundColor Red
     fn_PressAnyKey
   }
-  $command ="inspec exec $global:profilePath -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --input-file $global:profilePath/inputs-example.yml --show-progress --reporter=cli json:"+$jsonOutput
+  $command ="inspec exec $global:ProfilePath -t ssh://"+$global:VCSSHuser+"@"+$global:DefaultVIServer+" --password '"+$global:VCSSHpass+"' --input-file $global:ProfilePath/inputs-example.yml --show-progress --reporter=cli json:"+$jsonOutput
   
   Invoke-Expression $command
   Write-Host "vCenter Scan Complete!"
