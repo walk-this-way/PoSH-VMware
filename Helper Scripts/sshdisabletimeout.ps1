@@ -13,7 +13,7 @@ Function fn_disableSSHtimeout {
     foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Modifying shell timeout for  " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"		
-	    $esxiShellTimeout = Get-VMHostAdvancedSetting -Name UserVars.ESXiShellTimeOut
+	    $esxiShellTimeout = Get-AdvancedSetting -Name UserVars.ESXiShellTimeOut
         $esxiShellTimeout.Value = 0
         Get-VMHost | Set-AdvancedSetting -Name $esxiShellTimeout.Entity -Name $esxiShellTimeout.Name -Value 0 -Confirm:$false
     }
