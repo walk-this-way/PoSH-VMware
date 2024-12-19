@@ -12,11 +12,10 @@ Function fn_disableSSHtimeout {
     # Disable SSH shell timeout for each host in host_list.txt
     foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Modifying shell timeout for  " -NoNewline
-		Write-Host -ForegroundColor YELLOW "$VMhost"		
-	    $esxiShellTimeout = Get-AdvancedSetting -Name UserVars.ESXiShellTimeOut
-        $esxiShellTimeout.Value = 0
-        Get-VMHost | Set-AdvancedSetting -Name $esxiShellTimeout.Entity -Name $esxiShellTimeout.Name -Value 0 -Confirm:$false
+		Write-Host -ForegroundColor YELLOW "$VMhost"
+        Get-VMHost | Get-AdvancedSetting -Name UserVars.ESXiShellTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
     }
+	   
 
     #disable ssh in vcsa
     #/etc/profile.d/tmout.sh
