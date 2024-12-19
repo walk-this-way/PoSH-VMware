@@ -15,7 +15,7 @@ Function fn_disableSSHtimeout {
 		Write-Host -ForegroundColor YELLOW "$VMhost"		
 	    $esxiShellTimeout = Get-VMHostAdvancedSetting -Name UserVars.ESXiShellTimeOut
         $esxiShellTimeout.Value = 0
-        Get-VMHost | Set-VMHostAdvancedSetting -Entity $esxiShellTimeout.Entity -Name $esxiShellTimeout.Name -Value 0 -Confirm:$false
+        Get-VMHost | Set-AdvancedSetting -Name $esxiShellTimeout.Entity -Name $esxiShellTimeout.Name -Value 0 -Confirm:$false
     }
 
     #disable ssh in vcsa
@@ -27,7 +27,7 @@ Function fn_disableSSHtimeout {
 		Write-Host -ForegroundColor YELLOW "$VMhost"	
         Get-VMHost | Get-AdvancedSetting -Name UserVars.ESXiShellInteractiveTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
     }
-    
+
   Disconnect-VIServer -Server $vcenter -Confirm:$false
 }
     
