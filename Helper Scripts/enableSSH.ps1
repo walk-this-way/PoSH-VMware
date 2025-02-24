@@ -10,8 +10,7 @@ Function fn_EnableSSHandShell {
 	$answer = Read-Host
 	if($answer -eq "N"){
 		Write-Host -ForegroundColor RED "What host do you want to enable SSH and Shell on?"
-		$VMhost = Read-Host
-		$VMhost | Out-File host_list.txt
+		$hosts = Read-Host
 		exit
 	}
 	if($answer -eq "Y"){
@@ -24,14 +23,14 @@ Function fn_EnableSSHandShell {
 	#enable SSH, do not prompt for user confirmation (-confirm:$false)
 	foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Starting SSH service on " -NoNewline
-		Write-Host -ForegroundColor YELLOW "$VMhost"
+		Write-Host -ForegroundColor YELLOW "$hosts"
 		Get-VMHostService -VMHost $hosts | Where-Object {($_.Key -eq "TSM-SSH") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 		}
 
 	#enable bash shell, do not prompt for user confirmation (-confirm:$false)
 	foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Starting shell service on " -NoNewline
-		Write-Host -ForegroundColor YELLOW "$VMhost"
+		Write-Host -ForegroundColor YELLOW "$hosts"
 		Get-VMHostService -VMHost $hosts | Where-Object {($_.Key -eq "TSM") -and ($_.Running -eq $False)} | Start-VMHostService -confirm:$false
 	}
 
