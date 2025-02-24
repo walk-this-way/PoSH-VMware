@@ -13,7 +13,7 @@ Function fn_disableSSHtimeout {
     foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Modifying shell timeout for  " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"
-        Get-VMHost | Get-AdvancedSetting -Name UserVars.ESXiShellTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
+        Get-VMHost $hosts| Get-AdvancedSetting -Name UserVars.ESXiShellTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
     }
 	   
 
@@ -24,7 +24,7 @@ Function fn_disableSSHtimeout {
     foreach($hosts in $host_list){
 		Write-Host -ForegroundColor GREEN "Modifying shell interactive timeout for  " -NoNewline
 		Write-Host -ForegroundColor YELLOW "$VMhost"	
-        Get-VMHost | Get-AdvancedSetting -Name UserVars.ESXiShellInteractiveTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
+        Get-VMHost $hosts | Get-AdvancedSetting -Name UserVars.ESXiShellInteractiveTimeOut | Set-AdvancedSetting -Value 0 -Confirm:$false
     }
 
   Disconnect-VIServer -Server $vcenter -Confirm:$false
