@@ -304,7 +304,7 @@ Function fn_SSH_Check {
 
 Function fn_SSH_ON {
 # Turn ESX Host SSH Service on
-  $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Start-VMHostService -Confirm:$false | Out-Null
+ Get-VMHost $VMhost | Get-VmHostService | Where-Object {$_.key -eq "TSM-SSH"} | Start-VMHostService -Confirm:$false | Out-Null
 }
 
 Function fn_SSH_ALL_OFF {
